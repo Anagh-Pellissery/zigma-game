@@ -60,20 +60,24 @@ const Home = ({ api, setTok, setRole, showToast, tok, role, me, logout }) => {
       <Nav items={[]} active="" tok={tok} role={role} me={me} logout={logout} />
       <div className="wrap">
         <div className="hero">
-          <div>
-            <img className="logo" src="/logo.png" alt="All-in Put" />
+          <div className="hero-text" style={{ paddingBottom: '40px' }}>
+            <img className="logo" src="/logo-removebg-preview.png" alt="All-in Put" />
             <div className="mono red" style={{ marginTop: '14px' }}>Team-based electronics &amp; innovation event</div>
             <h1>Bid. Build. <span className="red">Win.</span></h1>
             <p className="mut" style={{ fontSize: '19px', maxWidth: '440px' }}>
               Bid for components with virtual credits. Build a working project with only what you win.
             </p>
             <form className="login" onSubmit={doLogin}>
-              <input placeholder="Team name" required value={u} onChange={e => setU(e.target.value)} />
+              <input placeholder="Team or Admin username" required value={u} onChange={e => setU(e.target.value)} />
               <input type="password" placeholder="Password" required value={p} onChange={e => setP(e.target.value)} />
-              <button className="btn">Enter the auction →</button>
+              <button className="btn">Enter portal →</button>
             </form>
           </div>
-          <img className="car" src="/car.png" alt="" />
+          <div className="hero-img-wrap">
+            <div className="red-circle"></div>
+            <img className="car" src="/car_clean.png" alt="" />
+          </div>
+          <div className="lot-tag">LOT #01 - SOLD?</div>
         </div>
       </div>
       <Strip />
@@ -425,7 +429,7 @@ const Display = ({ pub, ph, priceOf }) => {
               {p === 'double' ? 'Double price — ' + pub.mult + '×' : p === 'base' ? 'Base price window' : 'Not started'}
             </span>
           </div>
-          <img src="/logo.png" style={{ width: 'min(420px, 100%)' }} alt="" />
+          <img src="/logo-removebg-preview.png" style={{ width: 'min(420px, 100%)' }} alt="" />
         </div>
         <div className="grid">
           {pub.components.map(x => (

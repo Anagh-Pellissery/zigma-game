@@ -1,5 +1,5 @@
 {
- "v": 702,
+ "v": 708,
  "mult": 2,
  "defaultCredits": 5000,
  "timer": {
@@ -83,6 +83,24 @@
    "u": "ka"
   },
   "e2533f06-be67-4888-941f-5ec2d3b7020c": {
+   "role": "admin"
+  },
+  "b14abc48-656f-441e-bc93-a4e7be657e7a": {
+   "role": "admin"
+  },
+  "78f94cd6-6b04-4a68-8848-49f8c3451f3a": {
+   "role": "admin"
+  },
+  "de1ee054-492a-4735-8781-22e33c72f361": {
+   "role": "admin"
+  },
+  "f242a259-841a-48d8-b213-65af89d11552": {
+   "role": "admin"
+  },
+  "c0c18efe-54b5-4cde-beea-4aca8101c8e5": {
+   "role": "admin"
+  },
+  "96b907ca-fbd6-4662-96f6-3f9b1ee7f6e9": {
    "role": "admin"
   }
  }

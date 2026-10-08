@@ -1,10 +1,10 @@
 :root {
-  --bg: #25292a;
-  --cream: #dad6ae;
-  --red: #cc4527;
+  --bg: #111111;
+  --cream: #eeeadd;
+  --red: #d94221;
   --mut: #9a9985;
-  --line: #4a4f4f;
-  --card: #2d3233;
+  --line: #333333;
+  --card: #1a1a1a;
 }
 * {
   box-sizing: border-box;
@@ -114,14 +114,16 @@ input:focus, select:focus {
   outline: 1px solid var(--cream);
 }
 .hero {
+  position: relative;
   display: grid;
   grid-template-columns: 1.2fr 1fr;
   gap: 30px;
   align-items: center;
-  padding: 50px 0 30px;
+  padding: 50px 0 0;
 }
 .hero img.logo {
   width: min(480px, 90%);
+  filter: brightness(0) invert(1);
 }
 .hero h1 {
   font-size: clamp(44px, 7vw, 86px);
@@ -131,8 +133,45 @@ input:focus, select:focus {
 }
 .hero img.car {
   width: 100%;
-  max-width: 520px;
+  position: relative;
+  z-index: 1;
+  transform: translateY(35px);
+}
+.hero-img-wrap {
+  position: relative;
   justify-self: end;
+  width: 100%;
+  max-width: 540px;
+  display: flex;
+  align-items: flex-end;
+}
+.red-circle {
+  position: absolute;
+  bottom: 0;
+  left: 2%;
+  right: 2%;
+  aspect-ratio: 1;
+  background: var(--red);
+  border-radius: 50%;
+  z-index: -1;
+  transform: translateY(35px);
+}
+.hero-actions {
+  display: flex;
+  gap: 15px;
+  margin-top: 30px;
+}
+.lot-tag {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: var(--cream);
+  color: var(--bg);
+  padding: 8px 16px;
+  transform: rotate(4deg);
+  font: bold 14px 'Space Mono', monospace;
+  box-shadow: 2px 2px 0px rgba(0,0,0,0.5);
+  letter-spacing: 0.1em;
 }
 .login {
   display: grid;
@@ -150,6 +189,8 @@ input:focus, select:focus {
   text-transform: uppercase;
   letter-spacing: .1em;
   font-size: 14px;
+  position: relative;
+  z-index: 10;
 }
 .strip div {
   display: inline-block;
