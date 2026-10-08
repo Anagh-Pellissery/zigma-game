@@ -1,5 +1,5 @@
 {
- "v": 701,
+ "v": 702,
  "mult": 2,
  "defaultCredits": 5000,
  "timer": {
@@ -81,6 +81,9 @@
   "4f27ebf1-11b8-427f-81a5-a15931c04ff6": {
    "role": "team",
    "u": "ka"
+  },
+  "e2533f06-be67-4888-941f-5ec2d3b7020c": {
+   "role": "admin"
   }
  }
 }
