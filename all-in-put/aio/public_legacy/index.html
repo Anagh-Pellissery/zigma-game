@@ -165,8 +165,8 @@ const saveComps=()=>post('admin/components',{list:[...document.querySelectorAll(
 const addTeam=()=>post('admin/team-add',{u:$('#tn').value,p:$('#tp').value,credits:$('#tc').value},'Team added');
 const editTeam=b=>{const r=b.closest('tr');post('admin/team-edit',{u:r.dataset.t,p:r.querySelector('.tp').value,credits:r.querySelector('.tc').value},'Updated')};
 const delTeam=b=>{const u=b.closest('tr').dataset.t;if(confirm('Delete team '+u+'?'))post('admin/team-del',{u})};
-const resetOrders=()=>{if(confirm('Clear all recent order logs?'))post('admin/reset-orders',{},'Order logs cleared')};
-const resetAll=()=>{if(confirm('RESET ALL EVENT DATA?\n\nThis will:\n• Clear all order logs\n• Reset all team credits to default\n• Clear all team inventories\n• Stop and reset the timer'))post('admin/reset-all',{},'All event data reset')};
+const resetOrders=async()=>{if(confirm('Clear all recent order logs?')){try{await api('admin/reset-orders',{});toast('Order logs cleared');selectedAdminFilter='all';await load()}catch(e){toast(e.message||'Failed')}}};
+const resetAll=async()=>{if(confirm('RESET ALL EVENT DATA?\n\nThis will:\n• Clear all order logs\n• Reset all team credits to default\n• Clear all team inventories\n• Restore component stock levels\n• Stop and reset the timer')){try{await api('admin/reset-all',{});toast('All event data reset');selectedAdminFilter='all';await load()}catch(e){toast(e.message||'Failed')}}};
 
 function display(){if(!pub)return'';
  return `<div class="disp"><nav><span class="brand"><i class="dot"></i>All-in Put</span><span class="sp"></span><span class="mono mut" style="border:0">Live shop board</span></nav><div class="wrap">

@@ -8,7 +8,9 @@ let S={v:1,mult:2,defaultCredits:5000,timer:{startedAt:null,baseMin:15},teams:[]
 ].map(([name,qty,price],i)=>({id:'c'+(i+1),name,qty,price}))};
 if(fs.existsSync(DB)) S=Object.assign(S,JSON.parse(fs.readFileSync(DB)));
 const save=()=>{S.v++;fs.writeFileSync(DB,JSON.stringify(S,null,1));push()};
-const sess=new Map(); // token -> {role,u}
+S.sess=S.sess||{};
+const sess=new Map(Object.entries(S.sess));
+const saveSess=(k,v)=>{sess.set(k,v);S.sess[k]=v};
 const phase=()=>!S.timer.startedAt?'idle':(Date.now()-S.timer.startedAt<S.timer.baseMin*60000?'base':'double');
 const cur=c=>phase()==='double'?c.price*S.mult:c.price;
 const pub=()=>({v:S.v,now:Date.now(),startedAt:S.timer.startedAt,baseMs:S.timer.baseMin*60000,mult:S.mult,
@@ -30,9 +32,9 @@ http.createServer(async(req,res)=>{
   const a=url.slice(5),b=req.method==='POST'?await body(req):{},s=sess.get(req.headers['x-token']);
   try{
   if(a==='login'){
-   if(b.username==='admin'&&b.password===ADMIN_PASS){const t=crypto.randomUUID();sess.set(t,{role:'admin'});return send(res,200,{token:t,role:'admin'})}
+   if(b.username==='admin'&&b.password===ADMIN_PASS){const t=crypto.randomUUID();saveSess(t,{role:'admin'});save();return send(res,200,{token:t,role:'admin'})}
    const t=team(String(b.username||'').trim());
-   if(t&&t.p===b.password){const k=crypto.randomUUID();sess.set(k,{role:'team',u:t.u});return send(res,200,{token:k,role:'team',u:t.u})}
+   if(t&&t.p===b.password){const k=crypto.randomUUID();saveSess(k,{role:'team',u:t.u});save();return send(res,200,{token:k,role:'team',u:t.u})}
    return send(res,401,{error:'Wrong team name or password'})}
   if(!s)return send(res,401,{error:'Please log in again'});
   if(a==='me'&&s.role==='team'){const t=team(s.u);return t?send(res,200,me(t)):send(res,401,{error:'Team removed'})}
@@ -56,7 +58,13 @@ http.createServer(async(req,res)=>{
   else if(a==='admin/team-edit'){const t=team(b.u);if(t){if(b.p)t.p=String(b.p);if(b.credits!==''&&b.credits!=null)t.credits=+b.credits}}
   else if(a==='admin/team-del'){S.teams=S.teams.filter(t=>t.u!==b.u)}
   else if(a==='admin/reset-orders'){S.orders=[]}
-  else if(a==='admin/reset-all'){S.orders=[];S.timer.startedAt=null;S.teams.forEach(t=>{t.credits=S.defaultCredits;t.inv={}})}
+  else if(a==='admin/reset-all'){
+   S.orders=[];
+   S.timer.startedAt=null;
+   S.teams.forEach(t=>{t.credits=S.defaultCredits;t.inv={}});
+   const DEFAULTS=[['Bread board',20],['Jumper wires (pack of 40)',24],['10k resistor',100],['1k resistor',100],['3k3 resistor',100],['220 resistor',100],['LED',300],['Power supply',10]];
+   S.components.forEach(c=>{const d=DEFAULTS.find(x=>x[0]===c.name);if(d)c.qty=d[1]});
+  }
   else return send(res,404,{error:'Not found'});
   save();return send(res,200,{ok:1});
   }catch(e){return send(res,400,{error:typeof e==='string'?e:'Server error'})}
