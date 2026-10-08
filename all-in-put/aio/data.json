@@ -1,5 +1,5 @@
 {
- "v": 708,
+ "v": 711,
  "mult": 2,
  "defaultCredits": 5000,
  "timer": {
@@ -101,6 +101,15 @@
    "role": "admin"
   },
   "96b907ca-fbd6-4662-96f6-3f9b1ee7f6e9": {
+   "role": "admin"
+  },
+  "0bbbde48-d718-469c-b2a8-9b2602c6deff": {
+   "role": "admin"
+  },
+  "c08551d5-a730-481f-b235-c7cfee4d28df": {
+   "role": "admin"
+  },
+  "64028508-3aa1-498d-b3f7-64b42096481f": {
    "role": "admin"
   }
  }
