@@ -1,9 +1,9 @@
 {
- "v": 711,
+ "v": 738,
  "mult": 2,
  "defaultCredits": 5000,
  "timer": {
-  "startedAt": 1791454077851,
+  "startedAt": 1791469313087,
   "baseMin": 1
  },
  "teams": [],
@@ -58,6 +58,176 @@
    "price": 1000
   }
  ],
+ "auction": {
+  "status": "idle",
+  "queue": [],
+  "lot": null,
+  "history": [],
+  "items": [
+   {
+    "id": "a1",
+    "name": "Arduino Nano & Cable",
+    "time": 80,
+    "qty": 10,
+    "base": 1000,
+    "inc": 50,
+    "next": 1000
+   },
+   {
+    "id": "a2",
+    "name": "ESP & Cable",
+    "time": 100,
+    "qty": 10,
+    "base": 2000,
+    "inc": 100,
+    "next": 2000
+   },
+   {
+    "id": "a3",
+    "name": "Voltage Sensor",
+    "time": 45,
+    "qty": 3,
+    "base": 100,
+    "inc": 10,
+    "next": 100
+   },
+   {
+    "id": "a4",
+    "name": "Current Sensor",
+    "time": 45,
+    "qty": 3,
+    "base": 100,
+    "inc": 10,
+    "next": 100
+   },
+   {
+    "id": "a5",
+    "name": "RGB LED",
+    "time": 20,
+    "qty": 10,
+    "base": 20,
+    "inc": 5,
+    "next": 20
+   },
+   {
+    "id": "a6",
+    "name": "LDR",
+    "time": 40,
+    "qty": 40,
+    "base": 100,
+    "inc": 10,
+    "next": 100
+   },
+   {
+    "id": "a7",
+    "name": "PIR",
+    "time": 50,
+    "qty": 5,
+    "base": 200,
+    "inc": 10,
+    "next": 200
+   },
+   {
+    "id": "a8",
+    "name": "Ultrasonic",
+    "time": 50,
+    "qty": 40,
+    "base": 200,
+    "inc": 10,
+    "next": 200
+   },
+   {
+    "id": "a9",
+    "name": "Buzzer",
+    "time": 30,
+    "qty": 40,
+    "base": 50,
+    "inc": 5,
+    "next": 50
+   },
+   {
+    "id": "a10",
+    "name": "IR Sensor",
+    "time": 40,
+    "qty": 10,
+    "base": 100,
+    "inc": 10,
+    "next": 100
+   },
+   {
+    "id": "a11",
+    "name": "SG90 Servo",
+    "time": 80,
+    "qty": 6,
+    "base": 1000,
+    "inc": 50,
+    "next": 1000
+   },
+   {
+    "id": "a12",
+    "name": "MG90 Servo",
+    "time": 150,
+    "qty": 4,
+    "base": 1500,
+    "inc": 50,
+    "next": 1500
+   },
+   {
+    "id": "a13",
+    "name": "DHT",
+    "time": 40,
+    "qty": 5,
+    "base": 100,
+    "inc": 10,
+    "next": 100
+   },
+   {
+    "id": "a14",
+    "name": "LED",
+    "time": 0,
+    "qty": 1,
+    "base": 3000,
+    "inc": 0,
+    "next": 3000
+   },
+   {
+    "id": "a15",
+    "name": "Potentiometer (10k)",
+    "time": 20,
+    "qty": 10,
+    "base": 20,
+    "inc": 5,
+    "next": 20
+   },
+   {
+    "id": "a16",
+    "name": "Potentiometer (1M)",
+    "time": 20,
+    "qty": 10,
+    "base": 20,
+    "inc": 5,
+    "next": 20
+   },
+   {
+    "id": "a17",
+    "name": "Chassis Kit",
+    "time": 240,
+    "qty": 2,
+    "base": 7000,
+    "inc": 100,
+    "next": 7000
+   },
+   {
+    "id": "a18",
+    "name": "LCD",
+    "time": 100,
+    "qty": 0,
+    "base": 0,
+    "inc": 100,
+    "next": 0
+   }
+  ]
+ },
  "sess": {
   "5c5cb0e8-edfe-4e73-baf9-2b58e587ae1c": {
    "role": "admin"
@@ -110,6 +280,15 @@
    "role": "admin"
   },
   "64028508-3aa1-498d-b3f7-64b42096481f": {
+   "role": "admin"
+  },
+  "d942999c-5bd7-4fb4-b4b5-1bf4d4a53d9f": {
+   "role": "admin"
+  },
+  "d1cbbf2e-3e37-49d6-9f8f-94c9d526a61d": {
+   "role": "admin"
+  },
+  "7026ee68-d8f5-4fd3-b4b5-be70ccfee29a": {
    "role": "admin"
   }
  }

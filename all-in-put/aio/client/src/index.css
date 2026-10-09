@@ -438,3 +438,507 @@ h2 {
   .hero img.car { justify-self: center; }
   nav > * { padding: 0 12px; }
 }
+
+/* ======================================================
+   AUCTION DISPLAY — Matches site theme exactly
+   ====================================================== */
+
+.auc-disp {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
+/* ---- Top bar ---- */
+.auc-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  height: 56px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.auc-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cream);
+}
+
+.auc-live-badge {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border: 1px solid var(--red);
+  color: var(--red);
+  animation: badge-blink 2s step-end infinite;
+}
+
+@keyframes badge-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+.auc-topbar-stats {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border-left: 1px solid var(--line);
+}
+
+.auc-topbar-stats > span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 0 24px;
+  border-right: 1px solid var(--line);
+}
+
+.auc-stat-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--mut);
+}
+
+.auc-stat-val {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--cream);
+  line-height: 1;
+}
+
+.auc-demo-tag {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border: 1px solid var(--mut);
+  color: var(--mut);
+}
+
+/* ---- Idle / done screens ---- */
+.auc-idle-screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 20px;
+  padding: 60px 24px;
+}
+
+.auc-idle-logo {
+  width: min(420px, 80%);
+  filter: brightness(0) invert(1);
+  opacity: 0.9;
+}
+
+.auc-idle-title {
+  font-size: clamp(40px, 6vw, 80px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--cream);
+}
+
+.auc-idle-sub {
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--mut);
+}
+
+/* ---- Main 3-column layout ---- */
+.auc-main-layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 260px 280px;
+  min-height: 0;
+}
+
+/* ---- LEFT column ---- */
+.auc-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 40px;
+  border-right: 1px solid var(--line);
+  gap: 18px;
+}
+
+.auc-photo-wrap {
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 1 / 1;
+  background: var(--card);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.auc-photo {
+  width: 82%;
+  height: 82%;
+  object-fit: contain;
+}
+
+.auc-photo-placeholder {
+  font-size: 5rem;
+  opacity: 0.2;
+}
+
+.auc-comp-name {
+  font-size: clamp(26px, 3.5vw, 52px);
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--cream);
+}
+
+.auc-base-price {
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--mut);
+}
+
+/* ---- Current bid block ---- */
+.auc-bid-block {
+  width: 100%;
+  max-width: 380px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  padding: 22px 28px;
+  text-align: center;
+  transition: border-color 0.2s;
+}
+
+.auc-bid-block.auc-bid-pulse {
+  border-color: var(--red);
+  animation: bid-slam 0.8s ease-out;
+}
+
+@keyframes bid-slam {
+  0%   { border-color: var(--red); box-shadow: 0 0 0 4px rgba(217,66,33,0.25); }
+  60%  { box-shadow: 0 0 0 8px rgba(217,66,33,0.05); }
+  100% { box-shadow: none; }
+}
+
+.auc-bid-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--red);
+  margin-bottom: 8px;
+}
+
+.auc-bid-amount {
+  font-size: clamp(46px, 6vw, 86px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  color: var(--cream);
+}
+
+.auc-bid-team {
+  margin-top: 8px;
+  font-family: 'Space Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mut);
+}
+
+/* ---- CENTER column ---- */
+.auc-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 20px;
+  border-right: 1px solid var(--line);
+  gap: 20px;
+  background: var(--card);
+}
+
+.auc-timer-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.auc-timer-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--mut);
+}
+
+.auc-times-up {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--red);
+  animation: blink-text 0.8s step-end infinite;
+}
+
+.auc-no-limit {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--mut);
+}
+
+@keyframes blink-text {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.auc-status-pill {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 6px 14px;
+  border: 1px solid var(--line);
+  color: var(--mut);
+  text-align: center;
+}
+
+.auc-status-pill.live {
+  border-color: var(--cream);
+  color: var(--cream);
+}
+
+.auc-status-pill.paused {
+  border-color: var(--mut);
+  color: var(--mut);
+}
+
+.auc-status-pill.urgent {
+  border-color: var(--red);
+  background: var(--red);
+  color: #fff;
+  animation: blink-text 0.7s step-end infinite;
+}
+
+/* ---- Recent results ---- */
+.auc-recent {
+  width: 100%;
+  border: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.auc-recent-label {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--mut);
+  padding: 8px 12px 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.auc-recent-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 8px;
+  align-items: center;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+}
+
+.auc-recent-row:last-child { border-bottom: 0; }
+
+.auc-recent-name {
+  color: var(--cream);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px;
+}
+
+.auc-recent-price {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--red);
+  white-space: nowrap;
+}
+
+.auc-recent-team {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--mut);
+  white-space: nowrap;
+}
+
+.auc-recent-unsold {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  color: var(--mut);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  grid-column: 2 / 4;
+}
+
+/* ---- RIGHT column ---- */
+.auc-right {
+  display: flex;
+  flex-direction: column;
+  padding: 28px 20px;
+  gap: 10px;
+  background: var(--bg);
+}
+
+.auc-leaderboard-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--mut);
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 10px;
+}
+
+.auc-no-bids {
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--mut);
+  text-align: center;
+  margin-top: 20px;
+}
+
+.auc-bidder-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  position: relative;
+}
+
+.auc-bidder-card.auc-leader {
+  border-color: var(--cream);
+  background: var(--bg);
+}
+
+.auc-bidder-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 3px; height: 100%;
+  background: transparent;
+}
+.auc-bidder-card.rank-0::before { background: var(--cream); }
+.auc-bidder-card.rank-1::before { background: var(--mut); }
+.auc-bidder-card.rank-2::before { background: #4a4a4a; }
+
+.auc-bidder-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.auc-bidder-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cream);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.auc-bidder-bid {
+  font-family: 'Space Mono', monospace;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--red);
+  letter-spacing: -0.01em;
+  margin-top: 2px;
+}
+
+.auc-leader .auc-bidder-bid { color: var(--cream); }
+
+.auc-crown {
+  font-size: 1rem;
+  animation: crown-float 2s ease-in-out infinite;
+}
+
+@keyframes crown-float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-4px); }
+}
+
+.auc-lot-counter {
+  margin-top: auto;
+  text-align: center;
+  padding: 16px;
+  border: 1px solid var(--line);
+  background: var(--card);
+}
+
+.auc-lot-num {
+  font-family: 'Space Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--mut);
+}
+
+.auc-lot-val {
+  font-size: 2.6rem;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--cream);
+  line-height: 1;
+  margin-top: 4px;
+}
+
+/* ---- Countdown ring — adapt colours to site theme ---- */
+/* Ring track stays subtle; active arc uses cream/red */
+
+/* ---- Responsive ---- */
+@media (max-width: 900px) {
+  .auc-main-layout {
+    grid-template-columns: 1fr;
+  }
+  .auc-left, .auc-center, .auc-right {
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+    padding: 20px 16px;
+  }
+  .auc-photo-wrap { max-width: 200px; }
+  .auc-topbar { padding: 0 16px; }
+}

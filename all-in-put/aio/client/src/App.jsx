@@ -363,52 +363,226 @@ const AuctionAdmin = ({ adm, pub, api, load, showToast, now }) => {
   );
 };
 
-const AuctionDisplay = ({ pub, now }) => {
-  if (!pub || !pub.auction) return null;
-  const a = pub.auction, lot = a.lot;
-  const clk = aucClock(lot, a.status, now);
-  const headline = a.status === 'idle' ? 'Auction starting soon' : a.status === 'done' ? 'Auction complete' : a.status === 'paused' ? 'Auction paused' : null;
+// --- Component image map ---------------------------------------------------
+const COMP_IMAGES = {
+  'Arduino Nano & Cable': '/Arduino nano and cable.png',
+  'Arduino Nano &amp; Cable': '/Arduino nano and cable.png',
+  'ESP & Cable': '/ESP32 and cable.png',
+  'ESP &amp; Cable': '/ESP32 and cable.png',
+  'Voltage Sensor': '/Voltage sensor.png',
+  'Current Sensor': '/current sensor.png',
+  'RGB LED': null,
+  'LDR': '/LDR.png',
+  'PIR': '/PIR sensor.png',
+  'Ultrasonic': '/HCSR04 ULTRASONIC.png',
+  'Buzzer': '/Buzzer.png',
+  'IR Sensor': '/IR sensor.png',
+  'SG90 Servo': '/SG 90.png',
+  'MG90 Servo': '/MG90.png',
+  'DHT': '/DHT11 temp and humidity.png',
+  'LED': null,
+  'Potentiometer (10k)': '/potentiometer.png',
+  'Potentiometer (1M)': '/potentiometer.png',
+  'Chassis Kit': '/Chasis kit.png',
+  'LCD': '/LCD dislplay.png',
+};
+const getCompImg = (name) => {
+  if (!name) return null;
+  for (const [k, v] of Object.entries(COMP_IMAGES)) {
+    if (name.includes(k.replace('&amp;', '&')) || name.includes(k)) return v;
+  }
+  return null;
+};
+
+// --- Animated countdown ring -----------------------------------------------
+const CountdownRing = ({ pct, text, low, up, paused }) => {
+  const R = 72, C = 2 * Math.PI * R;
+  const dash = C * (1 - pct / 100);
+  const arcColor = up ? '#d94221' : low ? '#d94221' : paused ? '#9a9985' : '#eeeadd';
+  const textColor = up ? '#d94221' : low ? '#d94221' : paused ? '#9a9985' : '#eeeadd';
   return (
-    <div className="disp">
-      <nav><span className="brand"><i className="dot"></i>All-in Put</span><span className="sp"></span><span className="mono mut" style={{ border: 0 }}>Live component auction</span></nav>
-      <div className="wrap">
-        {!lot || a.status === 'idle' || a.status === 'done' ? (
-          <div style={{ padding: '70px 0', textAlign: 'center' }}>
-            <img src="/logo-removebg-preview.png" style={{ width: 'min(420px, 90%)' }} alt="" />
-            <h1 style={{ fontSize: 'clamp(40px,6vw,80px)', margin: '24px 0 8px' }}>{headline}</h1>
-            <div className="mono mut">{a.sold} sold · {a.done - a.sold} unsold</div>
-          </div>
-        ) : (
-          <div style={{ padding: '30px 0 10px' }}>
-            <div className="flex" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-              <span className={`tag mono ${clk.up ? 'd' : ''}`}>{a.status === 'paused' ? 'Paused' : clk.up ? "Time's up — going once, going twice…" : 'Bidding open'}</span>
-              <span className="mono mut">{a.left} lots to go</span>
-            </div>
-            <div style={{ fontSize: 'clamp(44px,7vw,110px)', fontWeight: 700, lineHeight: 1.05, margin: '18px 0' }}>{lot.name}</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '16px' }}>
-              <div className="card"><div className="mono mut">Time left</div>
-                <div className="clock" style={{ color: clk.low && !clk.up ? 'var(--red)' : undefined }}>{clk.text}</div>
-                {lot.time > 0 && <div style={{ height: '8px', background: 'var(--bg)' }}><div style={{ height: '100%', width: clk.pct + '%', background: 'var(--red)', transition: 'width .25s linear' }} /></div>}
-              </div>
-              <div className="card"><div className="mono mut">Starting bid</div><div className="price" style={{ fontSize: '72px' }}>{fmt(lot.start)}</div></div>
-              <div className="card"><div className="mono mut">Highest bid</div>
-                <div className="price red" style={{ fontSize: '72px' }}>{lot.leader ? fmt(lot.bid) : '—'}</div>
-                <div className="mono">{lot.leader ? lot.leader : 'No bids yet'}</div>
-              </div>
-            </div>
-          </div>
-        )}
-        {a.recent.length > 0 && (
-          <div className="panel" style={{ marginTop: '24px' }}>
-            <div className="mono red">// Just closed</div>
-            <table><tbody>
-              {a.recent.map((h, i) => (
-                <tr key={i}><td><b>{h.name}</b></td><td>{h.sold ? fmt(h.price) : '—'}</td><td>{h.sold ? h.team : <span className="mut">Unsold</span>}</td></tr>
-              ))}
-            </tbody></table>
-          </div>
-        )}
+    <div style={{ position: 'relative', width: 180, height: 180, flexShrink: 0 }}>
+      <svg width="180" height="180" style={{ transform: 'rotate(-90deg)' }}>
+        <circle cx="90" cy="90" r={R} fill="none" stroke="#333333" strokeWidth="6" />
+        <circle cx="90" cy="90" r={R} fill="none"
+          stroke={arcColor}
+          strokeWidth="6" strokeLinecap="square"
+          strokeDasharray={C} strokeDashoffset={dash}
+          style={{ transition: 'stroke-dashoffset 0.5s linear, stroke 0.4s' }} />
+      </svg>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ fontFamily: "'Space Mono', monospace", fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.04em', color: textColor, lineHeight: 1 }}>{text}</div>
+        <div style={{ fontSize: '9px', letterSpacing: '0.18em', textTransform: 'uppercase', color: '#9a9985', marginTop: 4, fontFamily: "'Space Mono', monospace" }}>{paused ? 'PAUSED' : up ? "TIME'S UP" : 'REMAINING'}</div>
       </div>
+    </div>
+  );
+};
+
+// --- Medal badge -----------------------------------------------------------
+const Medal = ({ rank }) => {
+  const labels = ['1', '2', '3'];
+  const colors = ['var(--cream)', 'var(--mut)', '#4a4a4a'];
+  const textColors = ['var(--bg)', 'var(--bg)', 'var(--mut)'];
+  return (
+    <div style={{ width: 38, height: 38, border: `2px solid ${colors[rank]}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: rank === 0 ? 'var(--cream)' : 'transparent' }}>
+      <span style={{ fontFamily: "'Space Mono', monospace", fontSize: '14px', fontWeight: 700, color: rank === 0 ? 'var(--bg)' : colors[rank], lineHeight: 1 }}>{labels[rank]}</span>
+    </div>
+  );
+};
+
+// --- Main Auction Display ---------------------------------------------------
+const DEMO_LOT = { name: 'Arduino Nano & Cable', start: 1000, bid: 4500, leader: 'Team Sigma', time: 60, endsAt: null, remainingMs: null };
+const DEMO_BIDDERS = [
+  { team: 'Team Sigma', bid: 4500 },
+  { team: 'Team Nexus', bid: 3800 },
+  { team: 'Team Zeta', bid: 3200 },
+];
+const DEMO_RECENT = [
+  { name: 'ESP32 & Cable', price: 6500, team: 'Team Nexus', sold: true },
+  { name: 'SG90 Servo', price: 2000, team: 'Team Zeta', sold: true },
+  { name: 'Buzzer', price: 0, sold: false },
+];
+
+const AuctionDisplay = ({ pub, now }) => {
+  const prevBid = useRef(null);
+  const [pulse, setPulse] = useState(false);
+
+  const isDemo = !pub || !pub.auction || pub.auction.status === 'idle';
+  const a = pub?.auction ?? { status: 'idle', lot: null, recent: DEMO_RECENT, sold: 2, done: 3, left: 5 };
+  const lot = isDemo ? DEMO_LOT : a.lot;
+  const clk = aucClock(lot, isDemo ? 'live' : a.status, now);
+  const status = isDemo ? 'live' : a.status;
+  const isDone = !isDemo && (a.status === 'done');
+  const isPaused = !isDemo && (a.status === 'paused');
+  const isLive = isDemo || (a.status === 'live');
+
+  // Build top-3 from recent history (bids recorded in history, current lot leader as #1)
+  let top3 = isDemo ? DEMO_BIDDERS : [];
+  if (!isDemo && lot?.leader) {
+    // current lot leader is always top
+    top3 = [{ team: lot.leader, bid: lot.bid }];
+    // fill from recent sold history for demo richness
+    (a.recent || []).filter(h => h.sold && h.team && h.team !== lot.leader).slice(0, 2).forEach(h => {
+      top3.push({ team: h.team, bid: h.price });
+    });
+  }
+
+  // Pulse on new bid
+  const currentBid = lot?.bid ?? 0;
+  useEffect(() => {
+    if (prevBid.current !== null && prevBid.current !== currentBid && currentBid > 0) {
+      setPulse(true);
+      const t = setTimeout(() => setPulse(false), 900);
+      return () => clearTimeout(t);
+    }
+    prevBid.current = currentBid;
+  }, [currentBid]);
+
+  const compImg = getCompImg(lot?.name ?? '');
+  const recent = isDemo ? DEMO_RECENT : (a.recent || []);
+
+  return (
+    <div className="auc-disp">
+      {/* Top bar */}
+      <div className="auc-topbar">
+        <div className="auc-brand"><i className="dot"></i><span>All-in Put</span><span className="auc-live-badge">{isDone ? 'FINISHED' : isPaused ? 'PAUSED' : isLive ? '● LIVE' : 'SOON'}</span></div>
+        <div className="auc-topbar-stats">
+          <span><span className="auc-stat-label">LOTS LEFT</span><span className="auc-stat-val">{a.left ?? 5}</span></span>
+          <span><span className="auc-stat-label">SOLD</span><span className="auc-stat-val">{a.sold ?? 2}</span></span>
+          {isDemo && <span className="auc-demo-tag">DEMO MODE</span>}
+        </div>
+      </div>
+
+      {isDone ? (
+        <div className="auc-idle-screen">
+          <img src="/logo-removebg-preview.png" alt="All-in Put" className="auc-idle-logo" />
+          <div className="auc-idle-title">Auction Complete</div>
+          <div className="auc-idle-sub">{a.sold} lots sold · {(a.done ?? 0) - (a.sold ?? 0)} unsold</div>
+        </div>
+      ) : !lot ? (
+        <div className="auc-idle-screen">
+          <img src="/logo-removebg-preview.png" alt="All-in Put" className="auc-idle-logo" />
+          <div className="auc-idle-title">Auction Starting Soon</div>
+          <div className="auc-idle-sub">Stand by for the first lot…</div>
+        </div>
+      ) : (
+        <div className="auc-main-layout">
+          {/* LEFT — component info */}
+          <div className="auc-left">
+            {/* Component photo */}
+            <div className="auc-photo-wrap">
+              {compImg
+                ? <img src={compImg} alt={lot.name} className="auc-photo" />
+                : <div className="auc-photo-placeholder">📦</div>
+              }
+            </div>
+
+            {/* Name */}
+            <div className="auc-comp-name">{lot.name}</div>
+            <div className="auc-base-price">Base Price: {fmt(lot.start)}</div>
+
+            {/* Current bid — focal point */}
+            <div className={`auc-bid-block${pulse ? ' auc-bid-pulse' : ''}`}>
+              <div className="auc-bid-label">CURRENT BID</div>
+              <div className="auc-bid-amount">{lot.leader ? fmt(lot.bid) : '—'}</div>
+              <div className="auc-bid-team">{lot.leader ? `↑ ${lot.leader}` : 'No bids placed yet'}</div>
+            </div>
+          </div>
+
+          {/* CENTER — timer */}
+          <div className="auc-center">
+            <div className="auc-timer-section">
+              <div className="auc-timer-label">TIME LEFT</div>
+              <CountdownRing pct={clk.pct} text={clk.text} low={clk.low} up={clk.up} paused={isPaused} />
+              {clk.up && <div className="auc-times-up">GOING ONCE…</div>}
+              {lot.time === 0 && <div className="auc-no-limit">NO TIME LIMIT</div>}
+            </div>
+
+            {/* Status pill */}
+            <div className={`auc-status-pill ${isPaused ? 'paused' : clk.up ? 'urgent' : 'live'}`}>
+              {isPaused ? '⏸ PAUSED' : clk.up ? "⚠ TIME'S UP" : '⚡ BIDDING OPEN'}
+            </div>
+
+            {/* Recent results mini */}
+            {recent.length > 0 && (
+              <div className="auc-recent">
+                <div className="auc-recent-label">RECENTLY CLOSED</div>
+                {recent.slice(0, 3).map((h, i) => (
+                  <div key={i} className="auc-recent-row">
+                    <span className="auc-recent-name">{h.name}</span>
+                    {h.sold
+                      ? <><span className="auc-recent-price">{fmt(h.price)}</span><span className="auc-recent-team">{h.team}</span></>
+                      : <span className="auc-recent-unsold">UNSOLD</span>
+                    }
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* RIGHT — top 3 */}
+          <div className="auc-right">
+            <div className="auc-leaderboard-title">TOP BIDDERS</div>
+            {top3.length === 0 && <div className="auc-no-bids">No bids yet</div>}
+            {top3.slice(0, 3).map((b, i) => (
+              <div key={i} className={`auc-bidder-card rank-${i}${i === 0 ? ' auc-leader' : ''}`}>
+                <Medal rank={i} />
+                <div className="auc-bidder-info">
+                  <div className="auc-bidder-name">{b.team}</div>
+                  <div className="auc-bidder-bid">{fmt(b.bid)}</div>
+                </div>
+                {i === 0 && <div className="auc-crown">👑</div>}
+              </div>
+            ))}
+            {/* Lot counter */}
+            <div className="auc-lot-counter">
+              <div className="auc-lot-num">LOT</div>
+              <div className="auc-lot-val">#{(a.done ?? 0) + 1}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Strip />
     </div>
   );
@@ -719,12 +893,22 @@ export default function App() {
   };
 
   const api = async (p, b) => {
-    const r = await fetch('/api/' + p, {
-      method: b ? 'POST' : 'GET',
-      headers: { 'content-type': 'application/json', 'x-token': tok },
-      body: b ? JSON.stringify(b) : undefined
-    });
-    const j = await r.json();
+    let r;
+    try {
+      r = await fetch('/api/' + p, {
+        method: b ? 'POST' : 'GET',
+        headers: { 'content-type': 'application/json', 'x-token': tok },
+        body: b ? JSON.stringify(b) : undefined
+      });
+    } catch {
+      throw new Error('Cannot reach the server — is server.js running on port 3000?');
+    }
+    let j;
+    try {
+      j = await r.json();
+    } catch {
+      throw new Error(r.ok ? 'Server returned an empty response' : `Server error (${r.status})`);
+    }
     if (!r.ok) {
       if (r.status === 401 && p !== 'login') logout(true);
       throw new Error(j.error || 'Error');
