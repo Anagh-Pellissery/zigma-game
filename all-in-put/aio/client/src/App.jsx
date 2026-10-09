@@ -542,9 +542,9 @@ const AuctionDisplay = ({ pub, now }) => {
 
           {/* CENTER — timer */}
           <div className="auc-center">
-            <div className="panel" style={{ textAlign: 'center', width: '100%', border: 'none', background: 'transparent' }}>
-              <div className="mono mut" style={{ marginBottom: '16px' }}>// TIME LEFT</div>
-              <div className="clock" style={{ color: clk.low && !clk.up ? 'var(--red)' : isPaused ? 'var(--mut)' : 'var(--cream)', fontSize: '64px' }}>{clk.text}</div>
+            <div style={{ textAlign: 'center', width: '100%' }}>
+              <div className="mono mut" style={{ marginBottom: '12px' }}>// TIME LEFT</div>
+              <div className="clock" style={{ color: (clk.low || clk.up) ? 'var(--red)' : isPaused ? 'var(--mut)' : 'var(--cream)', fontSize: '84px' }}>{clk.text}</div>
               {clk.up && <div className="auc-times-up" style={{ marginTop: '10px' }}>GOING ONCE…</div>}
               {lot.time === 0 && <div className="auc-no-limit" style={{ marginTop: '10px' }}>NO TIME LIMIT</div>}
             </div>
@@ -573,28 +573,26 @@ const AuctionDisplay = ({ pub, now }) => {
 
           {/* RIGHT — top 3 */}
           <div className="auc-right">
-            <div className="panel" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-              <div className="mono red" style={{ marginBottom: '16px' }}>// Top Bidders</div>
-              {top3.length === 0 ? (
-                <div className="mut">No bids yet</div>
-              ) : (
-                <table style={{ width: '100%' }}>
-                  <tbody>
-                    {top3.slice(0, 3).map((b, i) => (
-                      <tr key={i} style={{ borderBottom: i === 2 ? 'none' : '1px solid var(--line)' }}>
-                        <td className="mono mut" style={{ width: '30px' }}>{i + 1}</td>
-                        <td style={{ fontWeight: i === 0 ? 'bold' : 'normal', fontSize: i === 0 ? '16px' : '14px' }}>
-                          {b.team} {i === 0 && <span className="tag sm d" style={{marginLeft: '8px'}}>LEADER</span>}
-                        </td>
-                        <td className="price" style={{ fontSize: '20px', textAlign: 'right' }}>{fmt(b.bid)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
+            <div className="mono red" style={{ marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--line)' }}>// Top Bidders</div>
+            {top3.length === 0 ? (
+              <div className="mut">No bids yet</div>
+            ) : (
+              <table style={{ width: '100%' }}>
+                <tbody>
+                  {top3.slice(0, 3).map((b, i) => (
+                    <tr key={i} style={{ borderBottom: i === 2 ? 'none' : '1px solid var(--line)' }}>
+                      <td className="mono mut" style={{ width: '30px' }}>{i + 1}</td>
+                      <td style={{ fontWeight: i === 0 ? 'bold' : 'normal', fontSize: i === 0 ? '16px' : '14px' }}>
+                        {b.team} {i === 0 && <span className="tag sm d" style={{marginLeft: '8px'}}>LEADER</span>}
+                      </td>
+                      <td className="price" style={{ fontSize: '20px', textAlign: 'right' }}>{fmt(b.bid)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
             {/* Lot counter */}
-            <div className="panel" style={{ marginTop: 'auto', textAlign: 'center', padding: '20px' }}>
+            <div style={{ marginTop: 'auto', textAlign: 'center', paddingTop: '20px', borderTop: '1px solid var(--line)' }}>
               <div className="mono mut">Lot</div>
               <div style={{ fontSize: '38px', fontWeight: 'bold' }}>#{(a.done ?? 0) + 1}</div>
             </div>

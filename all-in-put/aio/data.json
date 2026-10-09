@@ -1,9 +1,9 @@
 {
- "v": 758,
+ "v": 767,
  "mult": 2,
  "defaultCredits": 5000,
  "timer": {
-  "startedAt": null,
+  "startedAt": 1791527420633,
   "baseMin": 1
  },
  "teams": [
@@ -68,8 +68,6 @@
  "auction": {
   "status": "live",
   "queue": [
-   "a6",
-   "a9",
    "a17",
    "a9",
    "a2",
@@ -278,16 +276,35 @@
    "a6"
   ],
   "lot": {
-   "itemId": "a8",
-   "name": "Ultrasonic",
-   "start": 200,
-   "time": 50,
+   "itemId": "a9",
+   "name": "Buzzer",
+   "start": 50,
+   "time": 30,
    "bid": 0,
    "leader": null,
-   "endsAt": 1791524783311,
+   "endsAt": 1791527457843,
    "remainingMs": null
   },
-  "history": [],
+  "history": [
+   {
+    "t": 1791527427843,
+    "itemId": "a6",
+    "name": "LDR",
+    "start": 100,
+    "price": 0,
+    "team": null,
+    "sold": false
+   },
+   {
+    "t": 1791527145662,
+    "itemId": "a8",
+    "name": "Ultrasonic",
+    "start": 200,
+    "price": 0,
+    "team": null,
+    "sold": false
+   }
+  ],
   "items": [
    {
     "id": "a1",
@@ -341,7 +358,7 @@
     "qty": 40,
     "base": 100,
     "inc": 10,
-    "next": 100
+    "next": 110
    },
    {
     "id": "a7",
@@ -368,7 +385,7 @@
     "qty": 40,
     "base": 50,
     "inc": 5,
-    "next": 50
+    "next": 55
    },
    {
     "id": "a10",
