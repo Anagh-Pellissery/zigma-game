@@ -447,7 +447,7 @@ const AuctionDisplay = ({ pub, now }) => {
   const prevBid = useRef(null);
   const [pulse, setPulse] = useState(false);
 
-  const isDemo = !pub || !pub.auction || pub.auction.status === 'idle';
+  const isDemo = !pub || !pub.auction;
   const a = pub?.auction ?? { status: 'idle', lot: null, recent: DEMO_RECENT, sold: 2, done: 3, left: 5 };
   const lot = isDemo ? DEMO_LOT : a.lot;
   const clk = aucClock(lot, isDemo ? 'live' : a.status, now);
@@ -484,14 +484,25 @@ const AuctionDisplay = ({ pub, now }) => {
   return (
     <div className="auc-disp">
       {/* Top bar */}
-      <div className="auc-topbar">
-        <div className="auc-brand"><i className="dot"></i><span>All-in Put</span><span className="auc-live-badge">{isDone ? 'FINISHED' : isPaused ? 'PAUSED' : isLive ? '● LIVE' : 'SOON'}</span></div>
-        <div className="auc-topbar-stats">
-          <span><span className="auc-stat-label">LOTS LEFT</span><span className="auc-stat-val">{a.left ?? 5}</span></span>
-          <span><span className="auc-stat-label">SOLD</span><span className="auc-stat-val">{a.sold ?? 2}</span></span>
-          {isDemo && <span className="auc-demo-tag">DEMO MODE</span>}
+      <nav>
+        <div className="brand" style={{ cursor: 'default' }}><i className="dot"></i>All-in Put</div>
+        <div style={{ cursor: 'default' }}>
+          <span className="auc-live-badge">{isDone ? 'FINISHED' : isPaused ? 'PAUSED' : isLive ? '● LIVE' : 'SOON'}</span>
         </div>
-      </div>
+        <span className="sp"></span>
+        <div style={{ cursor: 'default', padding: '0 24px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: '1.2' }}>
+            <span className="mono mut" style={{ fontSize: '9px', letterSpacing: '0.18em' }}>LOTS LEFT</span>
+            <span style={{ fontSize: '20px', fontWeight: 'bold' }}>{a.left ?? 5}</span>
+          </div>
+        </div>
+        <div style={{ cursor: 'default', padding: '0 24px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', lineHeight: '1.2' }}>
+            <span className="mono mut" style={{ fontSize: '9px', letterSpacing: '0.18em' }}>SOLD</span>
+            <span style={{ fontSize: '20px', fontWeight: 'bold' }}>{a.sold ?? 2}</span>
+          </div>
+        </div>
+      </nav>
 
       {isDone ? (
         <div className="auc-idle-screen">
@@ -531,11 +542,11 @@ const AuctionDisplay = ({ pub, now }) => {
 
           {/* CENTER — timer */}
           <div className="auc-center">
-            <div className="auc-timer-section">
-              <div className="auc-timer-label">TIME LEFT</div>
-              <CountdownRing pct={clk.pct} text={clk.text} low={clk.low} up={clk.up} paused={isPaused} />
-              {clk.up && <div className="auc-times-up">GOING ONCE…</div>}
-              {lot.time === 0 && <div className="auc-no-limit">NO TIME LIMIT</div>}
+            <div className="panel" style={{ textAlign: 'center', width: '100%', border: 'none', background: 'transparent' }}>
+              <div className="mono mut" style={{ marginBottom: '16px' }}>// TIME LEFT</div>
+              <div className="clock" style={{ color: clk.low && !clk.up ? 'var(--red)' : isPaused ? 'var(--mut)' : 'var(--cream)', fontSize: '64px' }}>{clk.text}</div>
+              {clk.up && <div className="auc-times-up" style={{ marginTop: '10px' }}>GOING ONCE…</div>}
+              {lot.time === 0 && <div className="auc-no-limit" style={{ marginTop: '10px' }}>NO TIME LIMIT</div>}
             </div>
 
             {/* Status pill */}
@@ -562,22 +573,30 @@ const AuctionDisplay = ({ pub, now }) => {
 
           {/* RIGHT — top 3 */}
           <div className="auc-right">
-            <div className="auc-leaderboard-title">TOP BIDDERS</div>
-            {top3.length === 0 && <div className="auc-no-bids">No bids yet</div>}
-            {top3.slice(0, 3).map((b, i) => (
-              <div key={i} className={`auc-bidder-card rank-${i}${i === 0 ? ' auc-leader' : ''}`}>
-                <Medal rank={i} />
-                <div className="auc-bidder-info">
-                  <div className="auc-bidder-name">{b.team}</div>
-                  <div className="auc-bidder-bid">{fmt(b.bid)}</div>
-                </div>
-                {i === 0 && <div className="auc-crown">👑</div>}
-              </div>
-            ))}
+            <div className="panel" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <div className="mono red" style={{ marginBottom: '16px' }}>// Top Bidders</div>
+              {top3.length === 0 ? (
+                <div className="mut">No bids yet</div>
+              ) : (
+                <table style={{ width: '100%' }}>
+                  <tbody>
+                    {top3.slice(0, 3).map((b, i) => (
+                      <tr key={i} style={{ borderBottom: i === 2 ? 'none' : '1px solid var(--line)' }}>
+                        <td className="mono mut" style={{ width: '30px' }}>{i + 1}</td>
+                        <td style={{ fontWeight: i === 0 ? 'bold' : 'normal', fontSize: i === 0 ? '16px' : '14px' }}>
+                          {b.team} {i === 0 && <span className="tag sm d" style={{marginLeft: '8px'}}>LEADER</span>}
+                        </td>
+                        <td className="price" style={{ fontSize: '20px', textAlign: 'right' }}>{fmt(b.bid)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
             {/* Lot counter */}
-            <div className="auc-lot-counter">
-              <div className="auc-lot-num">LOT</div>
-              <div className="auc-lot-val">#{(a.done ?? 0) + 1}</div>
+            <div className="panel" style={{ marginTop: 'auto', textAlign: 'center', padding: '20px' }}>
+              <div className="mono mut">Lot</div>
+              <div style={{ fontSize: '38px', fontWeight: 'bold' }}>#{(a.done ?? 0) + 1}</div>
             </div>
           </div>
         </div>
