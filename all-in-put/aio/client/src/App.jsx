@@ -733,7 +733,7 @@ const AuctionDisplay = ({ pub, now }) => {
   );
 };
 
-const Admin = ({ adm, pub, ph, priceOf, api, load, showToast, tok, role, me, logout, now }) => {
+const Admin = ({ route, adm, pub, ph, priceOf, api, load, showToast, tok, role, me, logout, now }) => {
   const [selectedAdminFilter, setSelectedAdminFilter] = useState('all');
   const [activeModalTeam, setActiveModalTeam] = useState(null);
 
@@ -790,11 +790,19 @@ const Admin = ({ adm, pub, ph, priceOf, api, load, showToast, tok, role, me, log
 
   const filteredOrders = selectedAdminFilter === 'all' ? A.orders : A.orders.filter(o => o.team === selectedAdminFilter);
 
+  const isAuction = route === 'admin-auction';
+
   return (
     <>
-      <Nav items={[['admin', 'Admin'], ['display', 'Shop display ↗'], ['auction-display', 'Auction display ↗']]} active="admin" tok={tok} role={role} me={me} logout={logout} />
+      <Nav items={[['admin', 'Shop Admin'], ['admin-auction', 'Auction Admin'], ['display', 'Shop display ↗'], ['auction-display', 'Auction display ↗']]} active={isAuction ? 'admin-auction' : 'admin'} tok={tok} role={role} me={me} logout={logout} />
       <div className="wrap">
-        <h2>Timer</h2>
+        {isAuction ? (
+          <>
+            {adm.auction && pub.auction && <AuctionAdmin adm={adm} pub={pub} api={api} load={load} showToast={showToast} now={now} />}
+          </>
+        ) : (
+          <>
+            <h2>Timer</h2>
         <div className="panel">
           <div className="flex">
             <div>
@@ -817,8 +825,6 @@ const Admin = ({ adm, pub, ph, priceOf, api, load, showToast, tok, role, me, log
             <button className="btn o" onClick={() => post('admin/settings', { mult: mu, defaultCredits: dc }, 'Saved')}>Save settings</button>
           </div>
         </div>
-
-        {adm.auction && pub.auction && <AuctionAdmin adm={adm} pub={pub} api={api} load={load} showToast={showToast} now={now} />}
 
         <h2>Inventory &amp; prices</h2>
         <div className="panel">
@@ -914,6 +920,8 @@ const Admin = ({ adm, pub, ph, priceOf, api, load, showToast, tok, role, me, log
             </tbody>
           </table>
         </div>
+        </>
+        )}
       </div>
 
       {activeModalTeam && (() => {
@@ -1076,7 +1084,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (route === 'admin' || route === 'shop') load();
+    if (route === 'admin' || route === 'admin-auction' || route === 'shop') load();
   }, [route, tok, role]);
 
   useEffect(() => {
@@ -1116,7 +1124,7 @@ export default function App() {
       <Toast message={toastMsg} />
       {route === 'display' ? <Display pub={pub} ph={ph} priceOf={priceOf} /> :
         route === 'auction-display' ? <AuctionDisplay pub={pub} now={nowUi} /> :
-          route === 'admin' && role === 'admin' ? <Admin adm={adm} pub={pub} ph={ph} priceOf={priceOf} api={api} load={load} showToast={showToast} tok={tok} role={role} me={me} logout={logout} now={nowUi} /> :
+          (route === 'admin' || route === 'admin-auction') && role === 'admin' ? <Admin route={route} adm={adm} pub={pub} ph={ph} priceOf={priceOf} api={api} load={load} showToast={showToast} tok={tok} role={role} me={me} logout={logout} now={nowUi} /> :
             route === 'shop' && role === 'team' ? <Shop pub={pub} me={me} setMe={setMe} ph={ph} priceOf={priceOf} api={api} showToast={showToast} tok={tok} role={role} logout={logout} /> :
               route === 'kit' && role === 'team' ? <MyKit pub={pub} me={me} tok={tok} role={role} logout={logout} /> :
                 route === 'auction' && role === 'team' ? <TeamAuction pub={pub} me={me} api={api} showToast={showToast} tok={tok} role={role} logout={logout} /> :
