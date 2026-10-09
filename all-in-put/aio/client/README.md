@@ -1,16 +1,40 @@
-# React + Vite
+# All-in Put
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React (Vite) front end + one Vercel serverless function (`api/game.js`) + Supabase Postgres.
 
-Currently, two official plugins are available:
+- All game rules (credits, stock, bids, timer phases) run inside Postgres functions in `supabase/schema.sql`.
+  Mutations are serialized with a lock, so many teams can bid/buy at the same moment safely.
+- The browser never gets write access: it can only read the `public_state` snapshot (live via Supabase Realtime)
+  and call the API, which checks a signed session token before calling the database with the secret key.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## One-time database setup
 
-## React Compiler
+Supabase Dashboard → **SQL Editor** → paste all of `supabase/schema.sql` → **Run**.
+It creates the tables, locks them down, and seeds the shop components and auction items. Re-running it is safe.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Environment variables
 
-## Expanding the Oxlint configuration
+| Name | Where | Notes |
+| --- | --- | --- |
+| `SUPABASE_URL` | server + build | project URL |
+| `SUPABASE_PUBLISHABLE_KEY` | build | baked into the browser bundle (read-only access to `public_state`) |
+| `SUPABASE_SECRET_KEY` | server only | never exposed to the browser |
+| `SESSION_SECRET` | server only | long random string; changing it logs everyone out |
+| `ADMIN_PASS` | server only | admin login is username `admin` + this password |
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+Locally these live in `client/.env` (git-ignored).
+
+## Run locally
+
+```
+npm install
+npm run dev
+```
+
+`npm run dev` serves the API too (see `vite.config.js`).
+
+## Deploy to Vercel
+
+1. Import the repo in Vercel, set **Root Directory** to `all-in-put/aio/client` (framework: Vite).
+2. Add the five environment variables above (Production + Preview).
+3. Deploy. Routes: `/#/` team login, `/#/admin-login`, `/#/display` shop board, `/#/auction-display` auction board.

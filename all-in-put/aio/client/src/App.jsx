@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './index.css';
+import { sb } from './supabase';
 
 const fmt = n => '₹' + Number(n).toLocaleString('en-IN');
 const mmss = ms => {
@@ -134,7 +135,7 @@ const Shop = ({ pub, me, setMe, ph, priceOf, api, showToast, tok, role, logout }
             </div>
           </div>
         </div>
-        <div className="tabs" style={{justifyContent:'flex-end'}}>
+        <div className="tabs" style={{ justifyContent: 'flex-end' }}>
           <span style={{ padding: '14px 0' }} className="mono">Credits <b className="red" style={{ fontSize: '18px' }}>{me ? fmt(me.credits) : '…'}</b></span>
         </div>
         <div className="grid">
@@ -162,16 +163,16 @@ const MyKit = ({ pub, me, tok, role, logout }) => {
     <>
       <TeamHeader active="kit" tok={tok} role={role} me={me} logout={logout} />
       <div className="wrap">
-        <div className="tabs" style={{justifyContent:'space-between'}}>
-          <h2 style={{margin:0}}>My Kit</h2>
+        <div className="tabs" style={{ justifyContent: 'space-between' }}>
+          <h2 style={{ margin: 0 }}>My Kit</h2>
           <span style={{ padding: '14px 0' }} className="mono">Credits <b className="red" style={{ fontSize: '18px' }}>{me ? fmt(me.credits) : '…'}</b></span>
         </div>
         <div className="panel" style={{ marginTop: '24px' }}>
           <div className="mono red">// What you own</div>
           {me && Object.keys(me.inv).length ? (
-            <table style={{marginTop:'12px'}}>
+            <table style={{ marginTop: '12px' }}>
               <tbody>
-                <tr><th style={{textAlign:'left'}}>Component</th><th style={{textAlign:'left'}}>Qty</th></tr>
+                <tr><th style={{ textAlign: 'left' }}>Component</th><th style={{ textAlign: 'left' }}>Qty</th></tr>
                 {[...pub.components, ...(pub.auctionItems || [])].filter(x => me.inv[x.id]).map(x => (
                   <tr key={x.id}><td>{x.name}</td><td>{me.inv[x.id]}</td></tr>
                 ))}
@@ -182,19 +183,19 @@ const MyKit = ({ pub, me, tok, role, logout }) => {
         <div className="panel" style={{ marginTop: '24px' }}>
           <div className="mono red">// Order History</div>
           {me && me.orders && me.orders.length ? (
-             <table style={{marginTop:'12px', width:'100%'}}>
-               <tbody>
-                 <tr><th style={{textAlign:'left'}}>Time</th><th style={{textAlign:'left'}}>Item</th><th style={{textAlign:'left'}}>Qty</th><th style={{textAlign:'left'}}>Total Paid</th></tr>
-                 {me.orders.map((o, i) => (
-                   <tr key={i} style={{ borderBottom: '1px solid var(--line)' }}>
-                     <td>{new Date(o.t).toLocaleTimeString()}</td>
-                     <td>{o.item}</td>
-                     <td>{o.qty}</td>
-                     <td>{fmt(o.total)}</td>
-                   </tr>
-                 ))}
-               </tbody>
-             </table>
+            <table style={{ marginTop: '12px', width: '100%' }}>
+              <tbody>
+                <tr><th style={{ textAlign: 'left' }}>Time</th><th style={{ textAlign: 'left' }}>Item</th><th style={{ textAlign: 'left' }}>Qty</th><th style={{ textAlign: 'left' }}>Total Paid</th></tr>
+                {me.orders.map((o, i) => (
+                  <tr key={i} style={{ borderBottom: '1px solid var(--line)' }}>
+                    <td>{new Date(o.t).toLocaleTimeString()}</td>
+                    <td>{o.item}</td>
+                    <td>{o.qty}</td>
+                    <td>{fmt(o.total)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           ) : <p className="mut">No past orders.</p>}
         </div>
       </div>
@@ -210,15 +211,16 @@ const TeamAuction = ({ pub, me, api, showToast, tok, role, logout }) => {
   const lot = a?.lot;
   const inc = lot?.inc || 0;
   const minBid = lot ? (lot.leader ? lot.bid + inc : lot.start) : 0;
-  
+
   const doBid = async (amt) => {
     try {
       if (!me) return;
-      if (me.credits < amt) throw new Error("Not enough balance");
+      // if we already lead, our held bid is returned before the new one is taken
+      if (me.credits + (lot.leader === me.u ? lot.bid : 0) < amt) throw new Error("Not enough balance");
       await api('team/bid', { amount: amt });
       showToast('Bid placed: ' + fmt(amt));
       setCustomBid('');
-    } catch(e) { showToast(e.message); }
+    } catch (e) { showToast(e.message); }
   };
 
   return (
@@ -226,7 +228,7 @@ const TeamAuction = ({ pub, me, api, showToast, tok, role, logout }) => {
       <TeamHeader active="auction" tok={tok} role={role} me={me} logout={logout} />
       <div style={{ padding: '20px 40px', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h2 style={{margin:0}}>Live Auction</h2>
+          <h2 style={{ margin: 0 }}>Live Auction</h2>
           <span className="mono">Credits <b className="red" style={{ fontSize: '18px' }}>{me ? fmt(me.credits) : '…'}</b></span>
         </div>
         {a?.status === 'done' ? (
@@ -258,7 +260,7 @@ const TeamAuction = ({ pub, me, api, showToast, tok, role, logout }) => {
               </div>
               <div style={{ borderTop: '1px solid var(--line)', paddingTop: '20px', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
                 {a?.status !== 'live' ? (
-                   <div className="mut">Auction is currently paused. Bidding is disabled.</div>
+                  <div className="mut">Auction is currently paused. Bidding is disabled.</div>
                 ) : !lot.leader ? (
                   <button className="btn r" onClick={() => doBid(minBid)}>Bid Base Price ({fmt(minBid)})</button>
                 ) : (
@@ -270,17 +272,17 @@ const TeamAuction = ({ pub, me, api, showToast, tok, role, logout }) => {
                 )}
                 {a?.status === 'live' && (
                   <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
-                     <input type="number" placeholder={`Min: ${minBid}`} value={customBid} onChange={e=>setCustomBid(e.target.value)} style={{ width: '120px' }} />
-                     <button className="btn o" onClick={() => doBid(Number(customBid))}>Bid</button>
+                    <input type="number" placeholder={`Min: ${minBid}`} value={customBid} onChange={e => setCustomBid(e.target.value)} style={{ width: '120px' }} />
+                    <button className="btn o" onClick={() => doBid(Number(customBid))}>Bid</button>
                   </div>
                 )}
               </div>
             </div>
-            
+
             <div className="panel" style={{ height: '100%', overflowY: 'auto' }}>
               <div className="mono red" style={{ marginBottom: '16px' }}>// Top Bidders</div>
               {(!lot.bids || lot.bids.length === 0) ? (
-                 <div className="mut">No bids yet</div>
+                <div className="mut">No bids yet</div>
               ) : (
                 <table style={{ width: '100%' }}>
                   <tbody>
@@ -288,7 +290,7 @@ const TeamAuction = ({ pub, me, api, showToast, tok, role, logout }) => {
                       <tr key={i} style={{ borderBottom: i === lot.bids.length - 1 ? 'none' : '1px solid var(--line)' }}>
                         <td className="mono mut" style={{ width: '30px', padding: '12px 0' }}>{i + 1}</td>
                         <td style={{ fontWeight: i === 0 ? 'bold' : 'normal', padding: '12px 0' }}>
-                          {b.team} {i === 0 && <span className="tag sm d" style={{marginLeft:'8px'}}>LEADER</span>}
+                          {b.team} {i === 0 && <span className="tag sm d" style={{ marginLeft: '8px' }}>LEADER</span>}
                         </td>
                         <td style={{ textAlign: 'right', fontWeight: 'bold', padding: '12px 0' }}>{fmt(b.bid)}</td>
                       </tr>
@@ -505,7 +507,6 @@ const COMP_IMAGES = {
   'ESP &amp; Cable': '/ESP32 and cable.png',
   'Voltage Sensor': '/Voltage sensor.png',
   'Current Sensor': '/current sensor.png',
-  'RGB LED': null,
   'LDR': '/LDR.png',
   'PIR': '/PIR sensor.png',
   'Ultrasonic': '/HCSR04 ULTRASONIC.png',
@@ -678,21 +679,34 @@ const AuctionDisplay = ({ pub, now }) => {
           </div>
 
           {/* CENTER — timer */}
-          <div className="auc-center">
-            <div style={{ textAlign: 'center', width: '100%' }}>
-              <div className="mono mut" style={{ marginBottom: '12px' }}>// TIME LEFT</div>
-              <div className="clock" style={{ color: (clk.low || clk.up) ? 'var(--red)' : isPaused ? 'var(--mut)' : 'var(--cream)', fontSize: '110px' }}>{clk.text}</div>
-              {clk.up && <div className="auc-times-up" style={{ marginTop: '10px', fontSize: '15px' }}>{getTimesUpText()}</div>}
-              {lot.time === 0 && <div className="auc-no-limit" style={{ marginTop: '10px' }}>NO TIME LIMIT</div>}
-            </div>
+          <div className="auc-center" style={{ position: 'relative' }}>
+            <div style={{ position: 'absolute', top: '40%', transform: 'translateY(-50%)', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div style={{ textAlign: 'center', width: '100%' }}>
+                <div className="mono mut" style={{ marginBottom: '12px' }}>// TIME LEFT</div>
+                <div className="clock" style={{ color: (clk.low || clk.up) ? 'var(--red)' : isPaused ? 'var(--mut)' : 'var(--cream)', fontSize: '110px' }}>{clk.text}</div>
+                {clk.up && <div className="auc-times-up" style={{ marginTop: '10px', fontSize: '15px' }}>{getTimesUpText()}</div>}
+                {lot.time === 0 && <div className="auc-no-limit" style={{ marginTop: '10px' }}>NO TIME LIMIT</div>}
+              </div>
 
-            {/* Status pill */}
-            <div className={`auc-status-pill ${isPaused ? 'paused' : clk.up ? 'urgent' : 'live'}`}>
-              {isPaused ? '⏸ PAUSED' : clk.up ? "⚠ TIME'S UP" : '⚡ BIDDING OPEN'}
+              {/* Status pill */}
+              <div className={`auc-status-pill ${isPaused ? 'paused' : clk.up ? 'urgent' : 'live'}`} style={{ marginTop: '20px' }}>
+                {isPaused ? '⏸ PAUSED' : clk.up ? "⚠ TIME'S UP" : '⚡ BIDDING OPEN'}
+              </div>
             </div>
 
             {/* Current bid — focal point */}
-            <div className={`auc-bid-block${pulse ? ' auc-bid-pulse' : ''}`} style={{ maxWidth: '460px', marginTop: '30px' }}>
+            <div className={`auc-bid-block${pulse ? ' auc-bid-pulse' : ''}`} 
+                 style={{ maxWidth: '460px', width: '100%', margin: 0, position: 'absolute', left: '50%', transform: 'translateX(-50%)' }}
+                 ref={node => {
+                   if (node) {
+                     const leftBlock = document.querySelector('.auc-left .auc-bid-block');
+                     if (leftBlock) {
+                       const leftTop = leftBlock.getBoundingClientRect().top;
+                       const parentTop = node.parentElement.getBoundingClientRect().top;
+                       node.style.top = (leftTop - parentTop) + 'px';
+                     }
+                   }
+                 }}>
               <div className="auc-bid-label">CURRENT BID</div>
               <div className="auc-bid-amount" style={{ fontSize: '110px' }}>{lot.leader ? fmt(lot.bid) : '—'}</div>
               <div className="auc-bid-team" style={{ fontSize: '14px' }}>{lot.leader ? `↑ ${lot.leader}` : 'No bids placed yet'}</div>
@@ -803,124 +817,124 @@ const Admin = ({ route, adm, pub, ph, priceOf, api, load, showToast, tok, role, 
         ) : (
           <>
             <h2>Timer</h2>
-        <div className="panel">
-          <div className="flex">
-            <div>
-              <div className="clock">{p === 'idle' ? mmss(pub.baseMs) : mmss(left)}</div>
-              <span className={`tag mono ${p === 'double' ? 'd' : ''}`}>
-                {p === 'double' ? 'Double price — ' + pub.mult + '×' : p === 'base' ? 'Base price window' : 'Not started'}
-              </span>
+            <div className="panel">
+              <div className="flex">
+                <div>
+                  <div className="clock">{p === 'idle' ? mmss(pub.baseMs) : mmss(left)}</div>
+                  <span className={`tag mono ${p === 'double' ? 'd' : ''}`}>
+                    {p === 'double' ? 'Double price — ' + pub.mult + '×' : p === 'base' ? 'Base price window' : 'Not started'}
+                  </span>
+                </div>
+                <label>Base-price minutes<input type="number" min="1" value={bm} onChange={e => setBm(e.target.value)} /></label>
+                <button className="btn r" onClick={() => post('admin/timer', { action: 'start', baseMin: bm }, 'Timer started')}>▶ Start</button>
+                <button className="btn o" onClick={() => { if (window.confirm('Reset the timer? The shop will lock.')) post('admin/timer', { action: 'reset', baseMin: bm }, 'Timer reset') }}>Reset</button>
+                <button className="btn o" onClick={() => post('admin/timer', { action: '', baseMin: bm }, 'Saved')}>Save minutes</button>
+              </div>
             </div>
-            <label>Base-price minutes<input type="number" min="1" value={bm} onChange={e => setBm(e.target.value)} /></label>
-            <button className="btn r" onClick={() => post('admin/timer', { action: 'start', baseMin: bm }, 'Timer started')}>▶ Start</button>
-            <button className="btn o" onClick={() => { if (window.confirm('Reset the timer? The shop will lock.')) post('admin/timer', { action: 'reset', baseMin: bm }, 'Timer reset') }}>Reset</button>
-            <button className="btn o" onClick={() => post('admin/timer', { action: '', baseMin: bm }, 'Saved')}>Save minutes</button>
-          </div>
-        </div>
 
-        <div className="panel">
-          <div className="flex">
-            <label>Price multiplier after timer (×)<input type="number" step="0.1" value={mu} onChange={e => setMu(e.target.value)} /></label>
-            <label>Default starting credits<input type="number" value={dc} onChange={e => setDc(e.target.value)} /></label>
-            <button className="btn o" onClick={() => post('admin/settings', { mult: mu, defaultCredits: dc }, 'Saved')}>Save settings</button>
-          </div>
-        </div>
+            <div className="panel">
+              <div className="flex">
+                <label>Price multiplier after timer (×)<input type="number" step="0.1" value={mu} onChange={e => setMu(e.target.value)} /></label>
+                <label>Default starting credits<input type="number" value={dc} onChange={e => setDc(e.target.value)} /></label>
+                <button className="btn o" onClick={() => post('admin/settings', { mult: mu, defaultCredits: dc }, 'Saved')}>Save settings</button>
+              </div>
+            </div>
 
-        <h2>Inventory &amp; prices</h2>
-        <div className="panel">
-          <table>
-            <tbody>
-              <tr><th>Component</th><th>Stock left</th><th>Base price</th><th>Selling now</th></tr>
-              {A.components.map(c => (
-                <tr key={c.id} data-id={c.id}>
-                  <td><input className="n" defaultValue={c.name} /></td>
-                  <td><input className="qty" type="number" defaultValue={c.qty} /></td>
-                  <td><input className="pr" type="number" defaultValue={c.price} /></td>
-                  <td className="price" style={{ fontSize: '20px' }}>{fmt(priceOf(c.price))}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-          <p><button className="btn" onClick={saveComps}>Save inventory</button></p>
-        </div>
+            <h2>Inventory &amp; prices</h2>
+            <div className="panel">
+              <table>
+                <tbody>
+                  <tr><th>Component</th><th>Stock left</th><th>Base price</th><th>Selling now</th></tr>
+                  {A.components.map(c => (
+                    <tr key={c.id} data-id={c.id}>
+                      <td><input className="n" defaultValue={c.name} /></td>
+                      <td><input className="qty" type="number" defaultValue={c.qty} /></td>
+                      <td><input className="pr" type="number" defaultValue={c.price} /></td>
+                      <td className="price" style={{ fontSize: '20px' }}>{fmt(priceOf(c.price))}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p><button className="btn" onClick={saveComps}>Save inventory</button></p>
+            </div>
 
-        <h2>Teams Leaderboard</h2>
-        <div className="panel">
-          <div className="flex">
-            <label>Team name<input value={tn} onChange={e => setTn(e.target.value)} /></label>
-            <label>Password<input value={tp} onChange={e => setTp(e.target.value)} /></label>
-            <label>Credits (optional)<input type="number" placeholder={A.defaultCredits} value={tc} onChange={e => setTc(e.target.value)} /></label>
-            <button className="btn" onClick={() => { post('admin/team-add', { u: tn, p: tp, credits: tc }, 'Team added'); setTn(''); setTp(''); setTc(''); }}>Add team</button>
-          </div>
-        </div>
+            <h2>Teams Leaderboard</h2>
+            <div className="panel">
+              <div className="flex">
+                <label>Team name<input value={tn} onChange={e => setTn(e.target.value)} /></label>
+                <label>Password<input value={tp} onChange={e => setTp(e.target.value)} /></label>
+                <label>Credits (optional)<input type="number" placeholder={A.defaultCredits} value={tc} onChange={e => setTc(e.target.value)} /></label>
+                <button className="btn" onClick={() => { post('admin/team-add', { u: tn, p: tp, credits: tc }, 'Team added'); setTn(''); setTp(''); setTc(''); }}>Add team</button>
+              </div>
+            </div>
 
-        <div className="panel">
-          <table>
-            <tbody>
-              <tr><th>Team</th><th>Password</th><th>Balance</th><th>Logs</th><th>Actions</th></tr>
-              {A.teams.length > 0 ? A.teams.map(t => {
-                const tCount = A.orders.filter(o => o.team === t.u).length;
-                return (
-                  <tr key={t.u} data-t={t.u}>
-                    <td><b style={{ fontSize: '16px' }}>{t.u}</b></td>
-                    <td><input className="tp" placeholder={t.p} style={{ maxWidth: '140px' }} /></td>
-                    <td><input className="tc" type="number" defaultValue={t.credits} style={{ maxWidth: '120px' }} /></td>
-                    <td>
-                      <button className="btn sm o" onClick={() => setActiveModalTeam(t.u)} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                        <span>📋 View Logs</span><span className="tag sm">{tCount}</span>
-                      </button>
-                    </td>
-                    <td>
-                      <button className="btn sm o" onClick={(e) => {
-                        const r = e.target.closest('tr');
-                        post('admin/team-edit', { u: t.u, p: r.querySelector('.tp').value, credits: r.querySelector('.tc').value }, 'Updated');
-                      }}>Update</button>
-                      <button className="btn sm o" onClick={() => { if (window.confirm('Delete team ' + t.u + '?')) post('admin/team-del', { u: t.u }); }}>Delete</button>
-                    </td>
-                  </tr>
-                );
-              }) : <tr><td className="mut" colSpan="5">No teams yet</td></tr>}
-            </tbody>
-          </table>
-          <p className="mut">Password box shows current password as placeholder. Click "View Logs" to view individual logs &amp; balance for that team.</p>
-        </div>
+            <div className="panel">
+              <table>
+                <tbody>
+                  <tr><th>Team</th><th>Password</th><th>Balance</th><th>Logs</th><th>Actions</th></tr>
+                  {A.teams.length > 0 ? A.teams.map(t => {
+                    const tCount = A.orders.filter(o => o.team === t.u).length;
+                    return (
+                      <tr key={t.u} data-t={t.u}>
+                        <td><b style={{ fontSize: '16px' }}>{t.u}</b></td>
+                        <td><input className="tp" placeholder="New password" style={{ maxWidth: '140px' }} /></td>
+                        <td><input className="tc" type="number" defaultValue={t.credits} style={{ maxWidth: '120px' }} /></td>
+                        <td>
+                          <button className="btn sm o" onClick={() => setActiveModalTeam(t.u)} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                            <span>📋 View Logs</span><span className="tag sm">{tCount}</span>
+                          </button>
+                        </td>
+                        <td>
+                          <button className="btn sm o" onClick={(e) => {
+                            const r = e.target.closest('tr');
+                            post('admin/team-edit', { u: t.u, p: r.querySelector('.tp').value, credits: r.querySelector('.tc').value }, 'Updated');
+                          }}>Update</button>
+                          <button className="btn sm o" onClick={() => { if (window.confirm('Delete team ' + t.u + '?')) post('admin/team-del', { u: t.u }); }}>Delete</button>
+                        </td>
+                      </tr>
+                    );
+                  }) : <tr><td className="mut" colSpan="5">No teams yet</td></tr>}
+                </tbody>
+              </table>
+              <p className="mut">Passwords are stored encrypted — type a new one and press Update to reset it (this logs the team out). Click "View Logs" to view individual logs &amp; balance for that team.</p>
+            </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '36px 0 12px', flexWrap: 'wrap', gap: '10px' }}>
-          <h2 style={{ margin: 0 }}>Recent orders</h2>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <span className="mono mut">Filter by Team:</span>
-            <select style={{ maxWidth: '220px' }} value={selectedAdminFilter} onChange={e => setSelectedAdminFilter(e.target.value)}>
-              <option value="all">All Teams ({A.orders.length})</option>
-              {A.teams.map(t => (
-                <option key={t.u} value={t.u}>{t.u} ({A.orders.filter(o => o.team === t.u).length})</option>
-              ))}
-            </select>
-            <button className="btn sm o" onClick={resetOrders} style={{ borderColor: 'var(--red)', color: 'var(--red)' }}>Clear Orders</button>
-          </div>
-        </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '36px 0 12px', flexWrap: 'wrap', gap: '10px' }}>
+              <h2 style={{ margin: 0 }}>Recent orders</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span className="mono mut">Filter by Team:</span>
+                <select style={{ maxWidth: '220px' }} value={selectedAdminFilter} onChange={e => setSelectedAdminFilter(e.target.value)}>
+                  <option value="all">All Teams ({A.orders.length})</option>
+                  {A.teams.map(t => (
+                    <option key={t.u} value={t.u}>{t.u} ({A.orders.filter(o => o.team === t.u).length})</option>
+                  ))}
+                </select>
+                <button className="btn sm o" onClick={resetOrders} style={{ borderColor: 'var(--red)', color: 'var(--red)' }}>Clear Orders</button>
+              </div>
+            </div>
 
-        <div className="panel">
-          <table>
-            <tbody>
-              <tr><th>Time</th><th>Team</th><th>Item</th><th>Qty</th><th>Total</th><th>Balance</th><th>Tier</th></tr>
-              {filteredOrders.length > 0 ? filteredOrders.slice(0, 50).map((o, i) => {
-                const teamData = A.teams.find(t => t.u === o.team);
-                return (
-                  <tr key={i}>
-                    <td>{new Date(o.t).toLocaleTimeString()}</td>
-                    <td><a href="#!" onClick={(e) => { e.preventDefault(); setActiveModalTeam(o.team); }} style={{ color: 'var(--cream)', fontWeight: 'bold', textDecoration: 'underline' }} title="View Team Inventory & Logs">{o.team}</a></td>
-                    <td>{o.item}</td>
-                    <td>{o.qty}</td>
-                    <td>{fmt(o.total)}</td>
-                    <td>{teamData ? fmt(teamData.credits) : '---'}</td>
-                    <td>{o.phase === 'double' ? '2×' : o.phase === 'auction' ? 'auction' : 'base'}</td>
-                  </tr>
-                );
-              }) : <tr><td className="mut" colSpan="7">No orders found</td></tr>}
-            </tbody>
-          </table>
-        </div>
-        </>
+            <div className="panel">
+              <table>
+                <tbody>
+                  <tr><th>Time</th><th>Team</th><th>Item</th><th>Qty</th><th>Total</th><th>Balance</th><th>Tier</th></tr>
+                  {filteredOrders.length > 0 ? filteredOrders.slice(0, 50).map((o, i) => {
+                    const teamData = A.teams.find(t => t.u === o.team);
+                    return (
+                      <tr key={i}>
+                        <td>{new Date(o.t).toLocaleTimeString()}</td>
+                        <td><a href="#!" onClick={(e) => { e.preventDefault(); setActiveModalTeam(o.team); }} style={{ color: 'var(--cream)', fontWeight: 'bold', textDecoration: 'underline' }} title="View Team Inventory & Logs">{o.team}</a></td>
+                        <td>{o.item}</td>
+                        <td>{o.qty}</td>
+                        <td>{fmt(o.total)}</td>
+                        <td>{teamData ? fmt(teamData.credits) : '---'}</td>
+                        <td>{o.phase === 'double' ? '2×' : o.phase === 'auction' ? 'auction' : 'base'}</td>
+                      </tr>
+                    );
+                  }) : <tr><td className="mut" colSpan="7">No orders found</td></tr>}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </div>
 
@@ -1048,13 +1062,13 @@ export default function App() {
   const api = async (p, b) => {
     let r;
     try {
-      r = await fetch('/api/' + p, {
-        method: b ? 'POST' : 'GET',
-        headers: { 'content-type': 'application/json', 'x-token': tok },
-        body: b ? JSON.stringify(b) : undefined
+      r = await fetch('/api/game?a=' + encodeURIComponent(p), {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: 'Bearer ' + tok },
+        body: JSON.stringify(b || {})
       });
     } catch {
-      throw new Error('Cannot reach the server — is server.js running on port 3000?');
+      throw new Error('Cannot reach the server — check your connection');
     }
     let j;
     try {
@@ -1069,13 +1083,25 @@ export default function App() {
     return j;
   };
 
+  // many live updates can land at once (e.g. a burst of bids) — run one reload at a time, then one catch-up
+  const loading = useRef(false);
+  const reloadAgain = useRef(false);
   const load = async () => {
-    if (tok && role === 'admin') {
-      try { const data = await api('admin/state'); setAdm(data); } catch (e) { }
-    } else if (tok && role === 'team') {
-      try { const data = await api('me'); setMe(data); } catch (e) { }
+    if (loading.current) { reloadAgain.current = true; return; }
+    loading.current = true;
+    try {
+      if (tok && role === 'admin') {
+        try { const data = await api('admin/state'); setAdm(data); } catch (e) { }
+      } else if (tok && role === 'team') {
+        try { const data = await api('me'); setMe(data); } catch (e) { }
+      }
+    } finally {
+      loading.current = false;
+      if (reloadAgain.current) { reloadAgain.current = false; loadRef.current(); }
     }
   };
+  const loadRef = useRef(load);
+  loadRef.current = load;
 
   const logout = (q) => {
     setTok(''); setRole(''); localStorage.clear(); setMe(null); setAdm(null);
@@ -1087,22 +1113,38 @@ export default function App() {
     if (route === 'admin' || route === 'admin-auction' || route === 'shop') load();
   }, [route, tok, role]);
 
+  // Live public state: Supabase Realtime pushes every change to the public_state row; a slow poll covers reconnects.
   useEffect(() => {
-    const es = new EventSource('/api/stream');
-    es.onmessage = async (e) => {
-      const data = JSON.parse(e.data);
-      setPub(data);
-      setOff(data.now - Date.now());
-      if (data.v !== lastV.current) {
-        lastV.current = data.v;
+    let alive = true;
+    const apply = (row) => {
+      if (!alive || !row || !row.data || row.v < lastV.current) return;
+      setPub(row.data);
+      if (row.v !== lastV.current) {
+        lastV.current = row.v;
         const ae = document.activeElement;
         if (!(ae && (ae.tagName === 'INPUT' || ae.tagName === 'SELECT') && window.location.hash.includes('admin'))) {
-          await load();
+          loadRef.current();
         }
       }
     };
-    return () => es.close();
-  }, [tok, role]);
+    const fetchState = async () => {
+      const { data } = await sb.from('public_state').select('v,data').eq('id', 1).maybeSingle();
+      apply(data);
+    };
+    const syncClock = async () => {
+      const t0 = Date.now();
+      const { data } = await sb.rpc('server_now');
+      if (alive && data) setOff(Number(data) - (t0 + Date.now()) / 2);
+    };
+    fetchState();
+    syncClock();
+    const ch = sb.channel('public_state')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'public_state' }, p => apply(p.new))
+      .subscribe(status => { if (status === 'SUBSCRIBED') fetchState(); });
+    const poll = setInterval(fetchState, 15000);
+    const clock = setInterval(syncClock, 60000);
+    return () => { alive = false; clearInterval(poll); clearInterval(clock); sb.removeChannel(ch); };
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
