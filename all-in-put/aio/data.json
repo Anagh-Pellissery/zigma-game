@@ -1,5 +1,5 @@
 {
- "v": 804,
+ "v": 810,
  "mult": 2,
  "defaultCredits": 5000,
  "timer": {
@@ -184,363 +184,10 @@
   }
  ],
  "auction": {
-  "status": "live",
-  "queue": [
-   "a5",
-   "a5",
-   "a1",
-   "a11",
-   "a6",
-   "a8",
-   "a9",
-   "a9",
-   "a8",
-   "a16",
-   "a6",
-   "a6",
-   "a15",
-   "a8",
-   "a1",
-   "a8",
-   "a8",
-   "a8",
-   "a9",
-   "a6",
-   "a1",
-   "a7",
-   "a6",
-   "a6",
-   "a8",
-   "a9",
-   "a6",
-   "a5",
-   "a6",
-   "a8",
-   "a9",
-   "a16",
-   "a1",
-   "a2",
-   "a6",
-   "a8",
-   "a8",
-   "a6",
-   "a8",
-   "a15",
-   "a9",
-   "a6",
-   "a5",
-   "a9",
-   "a2",
-   "a8",
-   "a7",
-   "a13",
-   "a4",
-   "a16",
-   "a9",
-   "a2",
-   "a10",
-   "a8",
-   "a10",
-   "a6",
-   "a6",
-   "a14",
-   "a15",
-   "a9",
-   "a9",
-   "a1",
-   "a6",
-   "a2",
-   "a9",
-   "a8",
-   "a9",
-   "a6",
-   "a9",
-   "a4",
-   "a6",
-   "a16",
-   "a8",
-   "a1",
-   "a8",
-   "a5",
-   "a9",
-   "a8",
-   "a8",
-   "a11",
-   "a1",
-   "a6",
-   "a8",
-   "a16",
-   "a16",
-   "a9",
-   "a13",
-   "a6",
-   "a6",
-   "a9",
-   "a10",
-   "a8",
-   "a2",
-   "a6",
-   "a9",
-   "a8",
-   "a15",
-   "a8",
-   "a9",
-   "a1",
-   "a6",
-   "a6",
-   "a3",
-   "a5",
-   "a9",
-   "a15",
-   "a8",
-   "a12",
-   "a12",
-   "a6",
-   "a9",
-   "a15",
-   "a6",
-   "a5",
-   "a10",
-   "a9",
-   "a15",
-   "a5",
-   "a8",
-   "a6",
-   "a9",
-   "a8",
-   "a15",
-   "a6",
-   "a11",
-   "a10",
-   "a9",
-   "a7",
-   "a15",
-   "a6",
-   "a8",
-   "a8",
-   "a8",
-   "a2",
-   "a11",
-   "a9",
-   "a9",
-   "a10",
-   "a9",
-   "a6",
-   "a3",
-   "a4",
-   "a10",
-   "a9",
-   "a8",
-   "a9",
-   "a9",
-   "a2",
-   "a9",
-   "a13",
-   "a8",
-   "a9",
-   "a8",
-   "a13",
-   "a13",
-   "a3",
-   "a15",
-   "a9",
-   "a6",
-   "a6",
-   "a9",
-   "a11",
-   "a2",
-   "a10",
-   "a16",
-   "a8",
-   "a6",
-   "a9",
-   "a9",
-   "a11",
-   "a8",
-   "a12",
-   "a9",
-   "a2",
-   "a10",
-   "a8",
-   "a8",
-   "a6",
-   "a10",
-   "a16",
-   "a8",
-   "a6",
-   "a7",
-   "a9",
-   "a8",
-   "a16",
-   "a6",
-   "a9",
-   "a5",
-   "a5",
-   "a6",
-   "a6"
-  ],
-  "lot": {
-   "itemId": "a16",
-   "name": "Potentiometer (1M)",
-   "start": 20,
-   "time": 20,
-   "bid": 20,
-   "leader": "abc",
-   "endsAt": 1791530969900,
-   "remainingMs": null,
-   "bids": [
-    {
-     "team": "abc",
-     "bid": 20
-    }
-   ]
-  },
-  "history": [
-   {
-    "t": 1791530949900,
-    "itemId": "a6",
-    "name": "LDR",
-    "start": 130,
-    "price": 136,
-    "team": "abc",
-    "sold": true
-   },
-   {
-    "t": 1791530872282,
-    "itemId": "a1",
-    "name": "Arduino Nano & Cable",
-    "start": 1050,
-    "price": 1050,
-    "team": "abc",
-    "sold": true
-   },
-   {
-    "t": 1791530770628,
-    "itemId": "a7",
-    "name": "PIR",
-    "start": 200,
-    "price": 200,
-    "team": "abc",
-    "sold": true
-   },
-   {
-    "t": 1791530722851,
-    "itemId": "a17",
-    "name": "Chassis Kit",
-    "start": 7100,
-    "price": 7750,
-    "team": "abc",
-    "sold": true
-   },
-   {
-    "t": 1791530260509,
-    "itemId": "a1",
-    "name": "Arduino Nano & Cable",
-    "start": 1000,
-    "price": 3000,
-    "team": "ddd",
-    "sold": true
-   },
-   {
-    "t": 1791529278476,
-    "itemId": "a6",
-    "name": "LDR",
-    "start": 120,
-    "price": 0,
-    "team": null,
-    "sold": false
-   },
-   {
-    "t": 1791529271839,
-    "itemId": "a8",
-    "name": "Ultrasonic",
-    "start": 220,
-    "price": 0,
-    "team": null,
-    "sold": false
-   },
-   {
-    "t": 1791529268875,
-    "itemId": "a8",
-    "name": "Ultrasonic",
-    "start": 210,
-    "price": 0,
-    "team": null,
-    "sold": false
-   },
-   {
-    "t": 1791529261704,
-    "itemId": "a6",
-    "name": "LDR",
-    "start": 110,
-    "price": 122312,
-    "team": "abc",
-    "sold": true
-   },
-   {
-    "t": 1791529037690,
-    "itemId": "a12",
-    "name": "MG90 Servo",
-    "start": 1500,
-    "price": 66666,
-    "team": "ddd",
-    "sold": true
-   },
-   {
-    "t": 1791528837026,
-    "itemId": "a2",
-    "name": "ESP & Cable",
-    "start": 2000,
-    "price": 0,
-    "team": null,
-    "sold": false
-   },
-   {
-    "t": 1791528366326,
-    "itemId": "a9",
-    "name": "Buzzer",
-    "start": 55,
-    "price": 0,
-    "team": null,
-    "sold": false
-   },
-   {
-    "t": 1791528323010,
-    "itemId": "a17",
-    "name": "Chassis Kit",
-    "start": 7000,
-    "price": 0,
-    "team": null,
-    "sold": false
-   },
-   {
-    "t": 1791527850908,
-    "itemId": "a9",
-    "name": "Buzzer",
-    "start": 50,
-    "price": 0,
-    "team": null,
-    "sold": false
-   },
-   {
-    "t": 1791527427843,
-    "itemId": "a6",
-    "name": "LDR",
-    "start": 100,
-    "price": 0,
-    "team": null,
-    "sold": false
-   },
-   {
-    "t": 1791527145662,
-    "itemId": "a8",
-    "name": "Ultrasonic",
-    "start": 200,
-    "price": 0,
-    "team": null,
-    "sold": false
-   }
-  ],
+  "status": "idle",
+  "queue": [],
+  "lot": null,
+  "history": [],
   "items": [
    {
     "id": "a1",
@@ -549,7 +196,7 @@
     "qty": 10,
     "base": 1000,
     "inc": 50,
-    "next": 1100
+    "next": 1000
    },
    {
     "id": "a2",
@@ -558,7 +205,7 @@
     "qty": 10,
     "base": 2000,
     "inc": 100,
-    "next": 2100
+    "next": 2000
    },
    {
     "id": "a3",
@@ -594,7 +241,7 @@
     "qty": 40,
     "base": 100,
     "inc": 10,
-    "next": 140
+    "next": 100
    },
    {
     "id": "a7",
@@ -603,7 +250,7 @@
     "qty": 5,
     "base": 200,
     "inc": 10,
-    "next": 210
+    "next": 200
    },
    {
     "id": "a8",
@@ -612,7 +259,7 @@
     "qty": 40,
     "base": 200,
     "inc": 10,
-    "next": 230
+    "next": 200
    },
    {
     "id": "a9",
@@ -621,7 +268,7 @@
     "qty": 40,
     "base": 50,
     "inc": 5,
-    "next": 60
+    "next": 50
    },
    {
     "id": "a10",
@@ -648,7 +295,7 @@
     "qty": 4,
     "base": 1500,
     "inc": 50,
-    "next": 1550
+    "next": 1500
    },
    {
     "id": "a13",
@@ -684,7 +331,7 @@
     "qty": 10,
     "base": 20,
     "inc": 5,
-    "next": 25
+    "next": 20
    },
    {
     "id": "a17",
@@ -693,7 +340,7 @@
     "qty": 2,
     "base": 7000,
     "inc": 100,
-    "next": 7200
+    "next": 7000
    },
    {
     "id": "a18",
@@ -792,6 +439,24 @@
   },
   "d4fb039b-cba3-4697-96f4-18e6c5770916": {
    "role": "admin"
+  },
+  "9b90e14f-2aa8-4398-bc6a-621ffd045247": {
+   "role": "team",
+   "u": "abc"
+  },
+  "406220b7-5ebf-41b1-ba3b-80b0976062db": {
+   "role": "team",
+   "u": "abc"
+  },
+  "f5ef693d-1602-45dd-a974-9d6e60e758a4": {
+   "role": "admin"
+  },
+  "2c813e6b-f6c0-4518-9cf8-9a76216c6371": {
+   "role": "admin"
+  },
+  "7414c8ff-d20b-464c-9dac-6bc75e126a3e": {
+   "role": "team",
+   "u": "abc"
   }
  }
 }

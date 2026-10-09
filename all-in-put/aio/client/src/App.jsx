@@ -39,7 +39,7 @@ const Nav = ({ items, active, tok, role, me, logout }) => (
   </nav>
 );
 
-const Home = ({ api, setTok, setRole, showToast, tok, role, me, logout }) => {
+const Home = ({ api, setTok, setRole, showToast, tok, role, me, logout, isAdminLogin }) => {
   const [u, setU] = useState('');
   const [p, setP] = useState('');
 
@@ -47,6 +47,12 @@ const Home = ({ api, setTok, setRole, showToast, tok, role, me, logout }) => {
     e.preventDefault();
     try {
       const j = await api('login', { username: u, password: p });
+      if (isAdminLogin && j.role !== 'admin') {
+        throw new Error("Invalid admin credentials");
+      }
+      if (!isAdminLogin && j.role === 'admin') {
+        throw new Error("Please use the Admin login portal");
+      }
       setTok(j.token); setRole(j.role);
       localStorage.tok = j.token; localStorage.role = j.role;
       window.location.hash = j.role === 'admin' ? '#/admin' : '#/shop';
@@ -62,16 +68,23 @@ const Home = ({ api, setTok, setRole, showToast, tok, role, me, logout }) => {
         <div className="hero">
           <div className="hero-text" style={{ paddingBottom: '40px' }}>
             <img className="logo" src="/logo-removebg-preview.png" alt="All-in Put" />
-            <div className="mono red" style={{ marginTop: '14px' }}>Team-based electronics &amp; innovation event</div>
-            <h1>Bid. Build. <span className="red">Win.</span></h1>
+            <div className="mono red" style={{ marginTop: '14px' }}>{isAdminLogin ? 'Admin Access' : 'Team-based electronics & innovation event'}</div>
+            <h1>{isAdminLogin ? 'Admin Portal' : <>Bid. Build. <span className="red">Win.</span></>}</h1>
             <p className="mut" style={{ fontSize: '19px', maxWidth: '440px' }}>
-              Bid for components with virtual credits. Build a working project with only what you win.
+              {isAdminLogin ? 'Manage the auction, shop, and teams.' : 'Bid for components with virtual credits. Build a working project with only what you win.'}
             </p>
             <form className="login" onSubmit={doLogin}>
-              <input placeholder="Team or Admin username" required value={u} onChange={e => setU(e.target.value)} />
+              <input placeholder={isAdminLogin ? "Admin username" : "Team username"} required value={u} onChange={e => setU(e.target.value)} />
               <input type="password" placeholder="Password" required value={p} onChange={e => setP(e.target.value)} />
               <button className="btn">Enter portal →</button>
             </form>
+            <div style={{ marginTop: '20px' }}>
+              {isAdminLogin ? (
+                <a href="#/" className="mut mono" style={{ fontSize: '14px', textDecoration: 'underline' }}>← Back to Team Login</a>
+              ) : (
+                <a href="#/admin-login" className="mut mono" style={{ fontSize: '14px', textDecoration: 'underline' }}>Admin Login →</a>
+              )}
+            </div>
           </div>
           <div className="hero-img-wrap">
             <div className="red-circle"></div>
@@ -216,12 +229,18 @@ const TeamAuction = ({ pub, me, api, showToast, tok, role, logout }) => {
           <h2 style={{margin:0}}>Live Auction</h2>
           <span className="mono">Credits <b className="red" style={{ fontSize: '18px' }}>{me ? fmt(me.credits) : '…'}</b></span>
         </div>
-        {a?.status !== 'live' ? (
-          <div className="panel" style={{ marginTop: '24px' }}>
-            <h3 style={{margin:0}}>{a?.status === 'paused' ? 'Auction is paused' : 'Auction is not live right now'}</h3>
+        {a?.status === 'done' ? (
+          <div className="auc-idle-screen" style={{ flex: 1 }}>
+            <img src="/logo-removebg-preview.png" alt="All-in Put" className="auc-idle-logo" />
+            <div className="auc-idle-title">Auction Complete</div>
+            <div className="auc-idle-sub">{a.sold} lots sold · {(a.done ?? 0) - (a.sold ?? 0)} unsold</div>
           </div>
         ) : !lot ? (
-          <div className="panel" style={{ marginTop: '24px' }}><p>Stand by...</p></div>
+          <div className="auc-idle-screen" style={{ flex: 1 }}>
+            <img src="/logo-removebg-preview.png" alt="All-in Put" className="auc-idle-logo" />
+            <div className="auc-idle-title">Auction Starting Soon</div>
+            <div className="auc-idle-sub">Stand by for the first lot…</div>
+          </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '24px', flex: 1, minHeight: 0 }}>
             <div className="panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%' }}>
@@ -238,7 +257,9 @@ const TeamAuction = ({ pub, me, api, showToast, tok, role, logout }) => {
                 <div className="mut">{lot.leader ? `Placed by ${lot.leader}` : 'No bids placed yet'}</div>
               </div>
               <div style={{ borderTop: '1px solid var(--line)', paddingTop: '20px', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
-                {!lot.leader ? (
+                {a?.status !== 'live' ? (
+                   <div className="mut">Auction is currently paused. Bidding is disabled.</div>
+                ) : !lot.leader ? (
                   <button className="btn r" onClick={() => doBid(minBid)}>Bid Base Price ({fmt(minBid)})</button>
                 ) : (
                   <>
@@ -247,10 +268,12 @@ const TeamAuction = ({ pub, me, api, showToast, tok, role, logout }) => {
                     <button className="btn r" onClick={() => doBid(lot.bid + (inc * 2))}>+{fmt(inc * 2)}</button>
                   </>
                 )}
-                <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
-                   <input type="number" placeholder={`Min: ${minBid}`} value={customBid} onChange={e=>setCustomBid(e.target.value)} style={{ width: '120px' }} />
-                   <button className="btn o" onClick={() => doBid(Number(customBid))}>Bid</button>
-                </div>
+                {a?.status === 'live' && (
+                  <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
+                     <input type="number" placeholder={`Min: ${minBid}`} value={customBid} onChange={e=>setCustomBid(e.target.value)} style={{ width: '120px' }} />
+                     <button className="btn o" onClick={() => doBid(Number(customBid))}>Bid</button>
+                  </div>
+                )}
               </div>
             </div>
             
@@ -1097,7 +1120,7 @@ export default function App() {
             route === 'shop' && role === 'team' ? <Shop pub={pub} me={me} setMe={setMe} ph={ph} priceOf={priceOf} api={api} showToast={showToast} tok={tok} role={role} logout={logout} /> :
               route === 'kit' && role === 'team' ? <MyKit pub={pub} me={me} tok={tok} role={role} logout={logout} /> :
                 route === 'auction' && role === 'team' ? <TeamAuction pub={pub} me={me} api={api} showToast={showToast} tok={tok} role={role} logout={logout} /> :
-                  <Home api={api} setTok={setTok} setRole={setRole} showToast={showToast} tok={tok} role={role} me={me} logout={logout} />}
+                  <Home api={api} setTok={setTok} setRole={setRole} showToast={showToast} tok={tok} role={role} me={me} logout={logout} isAdminLogin={route === 'admin-login'} />}
     </>
   );
 }
