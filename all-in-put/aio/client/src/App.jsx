@@ -209,12 +209,12 @@ const TeamAuction = ({ pub, me, api, showToast, tok, role, logout }) => {
   };
 
   return (
-    <>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
       <TeamHeader active="auction" tok={tok} role={role} me={me} logout={logout} />
-      <div className="wrap">
-        <div className="tabs" style={{justifyContent:'space-between'}}>
+      <div style={{ padding: '20px 40px', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <h2 style={{margin:0}}>Live Auction</h2>
-          <span style={{ padding: '14px 0' }} className="mono">Credits <b className="red" style={{ fontSize: '18px' }}>{me ? fmt(me.credits) : '…'}</b></span>
+          <span className="mono">Credits <b className="red" style={{ fontSize: '18px' }}>{me ? fmt(me.credits) : '…'}</b></span>
         </div>
         {a?.status !== 'live' ? (
           <div className="panel" style={{ marginTop: '24px' }}>
@@ -223,8 +223,8 @@ const TeamAuction = ({ pub, me, api, showToast, tok, role, logout }) => {
         ) : !lot ? (
           <div className="panel" style={{ marginTop: '24px' }}><p>Stand by...</p></div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px', marginTop: '24px' }}>
-            <div className="panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '24px', flex: 1, minHeight: 0 }}>
+            <div className="panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%' }}>
               <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
                 <div style={{ fontSize: '50px' }}>📦</div>
                 <div>
@@ -232,12 +232,12 @@ const TeamAuction = ({ pub, me, api, showToast, tok, role, logout }) => {
                   <div className="mono mut">Starting Bid: {fmt(lot.start)} &nbsp;|&nbsp; Increment: {fmt(inc)}</div>
                 </div>
               </div>
-              <div style={{ borderTop: '1px solid var(--line)', paddingTop: '20px' }}>
+              <div style={{ borderTop: '1px solid var(--line)', paddingTop: '20px', flex: 1 }}>
                 <div className="mono red">// Current Bid</div>
                 <div style={{ fontSize: '64px', fontWeight: 'bold' }}>{lot.leader ? fmt(lot.bid) : '---'}</div>
                 <div className="mut">{lot.leader ? `Placed by ${lot.leader}` : 'No bids placed yet'}</div>
               </div>
-              <div style={{ borderTop: '1px solid var(--line)', paddingTop: '20px', display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+              <div style={{ borderTop: '1px solid var(--line)', paddingTop: '20px', display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center' }}>
                 {!lot.leader ? (
                   <button className="btn r" onClick={() => doBid(minBid)}>Bid Base Price ({fmt(minBid)})</button>
                 ) : (
@@ -254,7 +254,7 @@ const TeamAuction = ({ pub, me, api, showToast, tok, role, logout }) => {
               </div>
             </div>
             
-            <div className="panel">
+            <div className="panel" style={{ height: '100%', overflowY: 'auto' }}>
               <div className="mono red" style={{ marginBottom: '16px' }}>// Top Bidders</div>
               {(!lot.bids || lot.bids.length === 0) ? (
                  <div className="mut">No bids yet</div>
@@ -277,7 +277,7 @@ const TeamAuction = ({ pub, me, api, showToast, tok, role, logout }) => {
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 };
 
