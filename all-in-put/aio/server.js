@@ -32,7 +32,7 @@ const pub=()=>({v:S.v,now:Date.now(),startedAt:S.timer.startedAt,baseMs:S.timer.
  auctionItems:S.auction.items.map(i=>({id:i.id,name:i.name})),auction:aucPub()});
 const aucItem=id=>S.auction.items.find(i=>i.id===id);
 const aucPub=()=>{const A=S.auction,l=A.lot;return{status:A.status,left:A.queue.length,
- lot:l?{name:l.name,start:l.start,bid:l.bid,leader:l.leader,time:l.time,endsAt:l.endsAt,remainingMs:l.remainingMs,bids:l.bids||[]}:null,
+ lot:l?{name:l.name,start:l.start,bid:l.bid,leader:l.leader,time:l.time,endsAt:l.endsAt,remainingMs:l.remainingMs,bids:l.bids||[],inc:S.auction.items.find(i=>i.id===l.itemId)?.inc||0}:null,
  recent:A.history.slice(0,6).map(h=>({name:h.name,price:h.price,team:h.team,sold:h.sold})),
  sold:A.history.filter(h=>h.sold).length,done:A.history.length}};
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
@@ -50,7 +50,7 @@ const send=(res,code,obj)=>{res.writeHead(code,{'content-type':'application/json
 const body=req=>new Promise(ok=>{let d='';req.on('data',c=>d+=c);req.on('end',()=>{try{ok(JSON.parse(d||'{}'))}catch{ok({})}})});
 const mime={'.html':'text/html','.png':'image/png','.js':'text/javascript','.css':'text/css'};
 const team=u=>S.teams.find(t=>t.u===u);
-const me=t=>({u:t.u,credits:t.credits,inv:t.inv});
+const me=t=>({u:t.u,credits:t.credits,inv:t.inv,orders:S.orders.filter(o=>o.team===t.u).map(o=>({item:o.item,qty:o.qty,total:o.total,t:o.t}))});
 http.createServer(async(req,res)=>{
  const url=req.url.split('?')[0];
  if(url==='/api/stream'){res.writeHead(200,{'content-type':'text/event-stream','cache-control':'no-cache',connection:'keep-alive'});
@@ -75,6 +75,16 @@ http.createServer(async(req,res)=>{
    c.qty-=q;t.credits-=cost;t.inv[c.id]=(t.inv[c.id]||0)+q;
    S.orders.unshift({t:Date.now(),team:t.u,item:c.name,qty:q,total:cost,phase:phase()});S.orders.length=Math.min(S.orders.length,2000);
    save();return send(res,200,me(t))}
+  if(a==='team/bid'&&s.role==='team'){
+   const A=S.auction,l=A.lot,t=team(s.u),amt=Math.floor(+b.amount);
+   if(A.status!=='live'||!l)throw'No live lot';if(l.endsAt&&Date.now()>l.endsAt)throw'Time is up for this lot';
+   if(!(amt>=l.start))throw'Bid must be at least '+l.start;if(l.leader&&amt<=l.bid)throw'Bid must beat '+l.bid;
+   if(t.credits<amt)throw'Team does not have enough credits';
+   l.bid=amt;l.leader=t.u;
+   l.bids = (l.bids || []).filter(x => x.team !== t.u);
+   l.bids.push({team: t.u, bid: amt});
+   l.bids = l.bids.sort((a,b)=>b.bid-a.bid).slice(0,3);
+   return send(res,200,me(t))}
   if(s.role!=='admin')return send(res,403,{error:'Admin only'});
   if(a==='admin/state')return send(res,200,{...S,phase:phase(),now:Date.now()});
   if(a==='admin/components'){b.list.forEach(x=>{const c=S.components.find(y=>y.id===x.id);if(c){c.name=String(x.name);c.qty=Math.max(0,+x.qty||0);c.price=Math.max(0,+x.price||0)}})}

@@ -85,8 +85,11 @@ const Home = ({ api, setTok, setRole, showToast, tok, role, me, logout }) => {
   );
 };
 
+const TeamHeader = ({ active, tok, role, me, logout }) => (
+  <Nav items={[['shop', 'Shop'], ['auction', 'Auction'], ['kit', 'My Kit']]} active={active} tok={tok} role={role} me={me} logout={logout} />
+);
+
 const Shop = ({ pub, me, setMe, ph, priceOf, api, showToast, tok, role, logout }) => {
-  const [tab, setTab] = useState('shop');
   const [qtys, setQtys] = useState({});
 
   if (!pub) return <div className="wrap">Loading...</div>;
@@ -103,7 +106,7 @@ const Shop = ({ pub, me, setMe, ph, priceOf, api, showToast, tok, role, logout }
 
   return (
     <>
-      <Nav items={[['shop', 'Shop']]} active="shop" tok={tok} role={role} me={me} logout={logout} />
+      <TeamHeader active="shop" tok={tok} role={role} me={me} logout={logout} />
       <div className="wrap">
         <div className="bar">
           <div>
@@ -118,51 +121,159 @@ const Shop = ({ pub, me, setMe, ph, priceOf, api, showToast, tok, role, logout }
             </div>
           </div>
         </div>
-        <div className="tabs">
-          <button className={tab === 'shop' ? 'on' : ''} onClick={() => setTab('shop')}>Shop</button>
-          <button className={tab === 'bid' ? 'on' : ''} onClick={() => setTab('bid')}>Bid</button>
-          <button className={tab === 'kit' ? 'on' : ''} onClick={() => setTab('kit')}>My kit</button>
-          <span style={{ flex: 1 }}></span>
+        <div className="tabs" style={{justifyContent:'flex-end'}}>
           <span style={{ padding: '14px 0' }} className="mono">Credits <b className="red" style={{ fontSize: '18px' }}>{me ? fmt(me.credits) : '…'}</b></span>
         </div>
+        <div className="grid">
+          {pub.components.map(x => (
+            <div className="card" key={x.id}>
+              <h3>{x.name}</h3>
+              <div className="price">{fmt(priceOf(x.base))}</div>
+              <div className="mono mut">per unit</div>
+              <div className="row">
+                <input type="number" min="1" value={qtys[x.id] || 1} onChange={e => setQtys({ ...qtys, [x.id]: e.target.value })} disabled={x.soldOut} />
+                <button className="btn sm buy" disabled={x.soldOut || p === 'idle'} onClick={() => buy(x.id, qtys[x.id] || 1)}>
+                  {x.soldOut ? 'Sold out' : 'Buy'}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+};
 
-        {tab === 'shop' && (
-          <div className="grid">
-            {pub.components.map(x => (
-              <div className="card" key={x.id}>
-                <h3>{x.name}</h3>
-                <div className="price">{fmt(priceOf(x.base))}</div>
-                <div className="mono mut">per unit</div>
-                <div className="row">
-                  <input type="number" min="1" value={qtys[x.id] || 1} onChange={e => setQtys({ ...qtys, [x.id]: e.target.value })} disabled={x.soldOut} />
-                  <button className="btn sm buy" disabled={x.soldOut || p === 'idle'} onClick={() => buy(x.id, qtys[x.id] || 1)}>
-                    {x.soldOut ? 'Sold out' : 'Buy'}
-                  </button>
+const MyKit = ({ pub, me, tok, role, logout }) => {
+  return (
+    <>
+      <TeamHeader active="kit" tok={tok} role={role} me={me} logout={logout} />
+      <div className="wrap">
+        <div className="tabs" style={{justifyContent:'space-between'}}>
+          <h2 style={{margin:0}}>My Kit</h2>
+          <span style={{ padding: '14px 0' }} className="mono">Credits <b className="red" style={{ fontSize: '18px' }}>{me ? fmt(me.credits) : '…'}</b></span>
+        </div>
+        <div className="panel" style={{ marginTop: '24px' }}>
+          <div className="mono red">// What you own</div>
+          {me && Object.keys(me.inv).length ? (
+            <table style={{marginTop:'12px'}}>
+              <tbody>
+                <tr><th style={{textAlign:'left'}}>Component</th><th style={{textAlign:'left'}}>Qty</th></tr>
+                {[...pub.components, ...(pub.auctionItems || [])].filter(x => me.inv[x.id]).map(x => (
+                  <tr key={x.id}><td>{x.name}</td><td>{me.inv[x.id]}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          ) : <p className="mut">Nothing yet — head to the shop.</p>}
+        </div>
+        <div className="panel" style={{ marginTop: '24px' }}>
+          <div className="mono red">// Order History</div>
+          {me && me.orders && me.orders.length ? (
+             <table style={{marginTop:'12px', width:'100%'}}>
+               <tbody>
+                 <tr><th style={{textAlign:'left'}}>Time</th><th style={{textAlign:'left'}}>Item</th><th style={{textAlign:'left'}}>Qty</th><th style={{textAlign:'left'}}>Total Paid</th></tr>
+                 {me.orders.map((o, i) => (
+                   <tr key={i} style={{ borderBottom: '1px solid var(--line)' }}>
+                     <td>{new Date(o.t).toLocaleTimeString()}</td>
+                     <td>{o.item}</td>
+                     <td>{o.qty}</td>
+                     <td>{fmt(o.total)}</td>
+                   </tr>
+                 ))}
+               </tbody>
+             </table>
+          ) : <p className="mut">No past orders.</p>}
+        </div>
+      </div>
+    </>
+  );
+};
+
+const TeamAuction = ({ pub, me, api, showToast, tok, role, logout }) => {
+  const [customBid, setCustomBid] = useState('');
+  if (!pub) return <div className="wrap">Loading...</div>;
+
+  const a = pub.auction;
+  const lot = a?.lot;
+  const inc = lot?.inc || 0;
+  const minBid = lot ? (lot.leader ? lot.bid + inc : lot.start) : 0;
+  
+  const doBid = async (amt) => {
+    try {
+      if (!me) return;
+      if (me.credits < amt) throw new Error("Not enough balance");
+      await api('team/bid', { amount: amt });
+      showToast('Bid placed: ' + fmt(amt));
+      setCustomBid('');
+    } catch(e) { showToast(e.message); }
+  };
+
+  return (
+    <>
+      <TeamHeader active="auction" tok={tok} role={role} me={me} logout={logout} />
+      <div className="wrap">
+        <div className="tabs" style={{justifyContent:'space-between'}}>
+          <h2 style={{margin:0}}>Live Auction</h2>
+          <span style={{ padding: '14px 0' }} className="mono">Credits <b className="red" style={{ fontSize: '18px' }}>{me ? fmt(me.credits) : '…'}</b></span>
+        </div>
+        {a?.status !== 'live' ? (
+          <div className="panel" style={{ marginTop: '24px' }}>
+            <h3 style={{margin:0}}>{a?.status === 'paused' ? 'Auction is paused' : 'Auction is not live right now'}</h3>
+          </div>
+        ) : !lot ? (
+          <div className="panel" style={{ marginTop: '24px' }}><p>Stand by...</p></div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px', marginTop: '24px' }}>
+            <div className="panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+              <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                <div style={{ fontSize: '50px' }}>📦</div>
+                <div>
+                  <h3 style={{ fontSize: '28px', margin: '0 0 8px 0' }}>{lot.name}</h3>
+                  <div className="mono mut">Starting Bid: {fmt(lot.start)} &nbsp;|&nbsp; Increment: {fmt(inc)}</div>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-        {tab === 'bid' && (
-          <div className="panel" style={{ marginTop: '24px' }}>
-            <div className="mono red">// Bidding</div>
-            <h2 style={{ margin: '8px 0' }}>Coming soon</h2>
-            <p className="mut">The auction round will open here once the organisers set it up.</p>
-          </div>
-        )}
-        {tab === 'kit' && (
-          <div className="panel" style={{ marginTop: '24px' }}>
-            <div className="mono red">// What you own</div>
-            {me && Object.keys(me.inv).length ? (
-              <table>
-                <tbody>
-                  <tr><th>Component</th><th>Qty</th></tr>
-                  {[...pub.components, ...(pub.auctionItems || [])].filter(x => me.inv[x.id]).map(x => (
-                    <tr key={x.id}><td>{x.name}</td><td>{me.inv[x.id]}</td></tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : <p className="mut">Nothing yet — head to the shop.</p>}
+              <div style={{ borderTop: '1px solid var(--line)', paddingTop: '20px' }}>
+                <div className="mono red">// Current Bid</div>
+                <div style={{ fontSize: '64px', fontWeight: 'bold' }}>{lot.leader ? fmt(lot.bid) : '---'}</div>
+                <div className="mut">{lot.leader ? `Placed by ${lot.leader}` : 'No bids placed yet'}</div>
+              </div>
+              <div style={{ borderTop: '1px solid var(--line)', paddingTop: '20px', display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+                {!lot.leader ? (
+                  <button className="btn r" onClick={() => doBid(minBid)}>Bid Base Price ({fmt(minBid)})</button>
+                ) : (
+                  <>
+                    <button className="btn r" onClick={() => doBid(minBid)}>+{fmt(inc)}</button>
+                    <button className="btn r" onClick={() => doBid(lot.bid + Math.floor(inc * 1.5))}>+{fmt(Math.floor(inc * 1.5))}</button>
+                    <button className="btn r" onClick={() => doBid(lot.bid + (inc * 2))}>+{fmt(inc * 2)}</button>
+                  </>
+                )}
+                <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
+                   <input type="number" placeholder={`Min: ${minBid}`} value={customBid} onChange={e=>setCustomBid(e.target.value)} style={{ width: '120px' }} />
+                   <button className="btn o" onClick={() => doBid(Number(customBid))}>Bid</button>
+                </div>
+              </div>
+            </div>
+            
+            <div className="panel">
+              <div className="mono red" style={{ marginBottom: '16px' }}>// Top Bidders</div>
+              {(!lot.bids || lot.bids.length === 0) ? (
+                 <div className="mut">No bids yet</div>
+              ) : (
+                <table style={{ width: '100%' }}>
+                  <tbody>
+                    {lot.bids.map((b, i) => (
+                      <tr key={i} style={{ borderBottom: i === lot.bids.length - 1 ? 'none' : '1px solid var(--line)' }}>
+                        <td className="mono mut" style={{ width: '30px', padding: '12px 0' }}>{i + 1}</td>
+                        <td style={{ fontWeight: i === 0 ? 'bold' : 'normal', padding: '12px 0' }}>
+                          {b.team} {i === 0 && <span className="tag sm d" style={{marginLeft:'8px'}}>LEADER</span>}
+                        </td>
+                        <td style={{ textAlign: 'right', fontWeight: 'bold', padding: '12px 0' }}>{fmt(b.bid)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -984,7 +1095,9 @@ export default function App() {
         route === 'auction-display' ? <AuctionDisplay pub={pub} now={nowUi} /> :
           route === 'admin' && role === 'admin' ? <Admin adm={adm} pub={pub} ph={ph} priceOf={priceOf} api={api} load={load} showToast={showToast} tok={tok} role={role} me={me} logout={logout} now={nowUi} /> :
             route === 'shop' && role === 'team' ? <Shop pub={pub} me={me} setMe={setMe} ph={ph} priceOf={priceOf} api={api} showToast={showToast} tok={tok} role={role} logout={logout} /> :
-              <Home api={api} setTok={setTok} setRole={setRole} showToast={showToast} tok={tok} role={role} me={me} logout={logout} />}
+              route === 'kit' && role === 'team' ? <MyKit pub={pub} me={me} tok={tok} role={role} logout={logout} /> :
+                route === 'auction' && role === 'team' ? <TeamAuction pub={pub} me={me} api={api} showToast={showToast} tok={tok} role={role} logout={logout} /> :
+                  <Home api={api} setTok={setTok} setRole={setRole} showToast={showToast} tok={tok} role={role} me={me} logout={logout} />}
     </>
   );
 }

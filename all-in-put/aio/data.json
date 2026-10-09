@@ -1,5 +1,5 @@
 {
- "v": 790,
+ "v": 801,
  "mult": 2,
  "defaultCredits": 5000,
  "timer": {
@@ -16,21 +16,89 @@
   {
    "u": "abc",
    "p": "123",
-   "credits": 322132,
+   "credits": 313962,
    "inv": {
-    "a6": 1
+    "a6": 1,
+    "c3": 11,
+    "a17": 1,
+    "a7": 1
    }
   },
   {
    "u": "ddd",
    "p": "1111",
-   "credits": 1044445,
+   "credits": 1041445,
    "inv": {
-    "a12": 1
+    "a12": 1,
+    "a1": 1
    }
   }
  ],
  "orders": [
+  {
+   "t": 1791530770628,
+   "team": "abc",
+   "item": "PIR",
+   "qty": 1,
+   "total": 200,
+   "phase": "auction"
+  },
+  {
+   "t": 1791530722851,
+   "team": "abc",
+   "item": "Chassis Kit",
+   "qty": 1,
+   "total": 7750,
+   "phase": "auction"
+  },
+  {
+   "t": 1791530631389,
+   "team": "abc",
+   "item": "10k resistor",
+   "qty": 1,
+   "total": 20,
+   "phase": "double"
+  },
+  {
+   "t": 1791530624641,
+   "team": "abc",
+   "item": "10k resistor",
+   "qty": 4,
+   "total": 80,
+   "phase": "double"
+  },
+  {
+   "t": 1791530618654,
+   "team": "abc",
+   "item": "10k resistor",
+   "qty": 3,
+   "total": 60,
+   "phase": "double"
+  },
+  {
+   "t": 1791530611882,
+   "team": "abc",
+   "item": "10k resistor",
+   "qty": 2,
+   "total": 40,
+   "phase": "double"
+  },
+  {
+   "t": 1791530607139,
+   "team": "abc",
+   "item": "10k resistor",
+   "qty": 1,
+   "total": 20,
+   "phase": "double"
+  },
+  {
+   "t": 1791530260509,
+   "team": "ddd",
+   "item": "Arduino Nano & Cable",
+   "qty": 1,
+   "total": 3000,
+   "phase": "auction"
+  },
   {
    "t": 1791529261704,
    "team": "abc",
@@ -64,7 +132,7 @@
   {
    "id": "c3",
    "name": "10k resistor",
-   "qty": 92,
+   "qty": 81,
    "price": 10
   },
   {
@@ -101,9 +169,6 @@
  "auction": {
   "status": "live",
   "queue": [
-   "a17",
-   "a7",
-   "a1",
    "a6",
    "a16",
    "a5",
@@ -302,28 +367,42 @@
   "lot": {
    "itemId": "a1",
    "name": "Arduino Nano & Cable",
-   "start": 1000,
+   "start": 1050,
    "time": 80,
-   "bid": 3000,
-   "leader": "ddd",
-   "endsAt": 1791529358476,
+   "bid": 0,
+   "leader": null,
+   "endsAt": 1791530850628,
    "remainingMs": null,
-   "bids": [
-    {
-     "team": "ddd",
-     "bid": 3000
-    },
-    {
-     "team": "abc",
-     "bid": 2500
-    },
-    {
-     "team": "aaa",
-     "bid": 2000
-    }
-   ]
+   "bids": []
   },
   "history": [
+   {
+    "t": 1791530770628,
+    "itemId": "a7",
+    "name": "PIR",
+    "start": 200,
+    "price": 200,
+    "team": "abc",
+    "sold": true
+   },
+   {
+    "t": 1791530722851,
+    "itemId": "a17",
+    "name": "Chassis Kit",
+    "start": 7100,
+    "price": 7750,
+    "team": "abc",
+    "sold": true
+   },
+   {
+    "t": 1791530260509,
+    "itemId": "a1",
+    "name": "Arduino Nano & Cable",
+    "start": 1000,
+    "price": 3000,
+    "team": "ddd",
+    "sold": true
+   },
    {
     "t": 1791529278476,
     "itemId": "a6",
@@ -432,7 +511,7 @@
     "qty": 10,
     "base": 1000,
     "inc": 50,
-    "next": 1050
+    "next": 1100
    },
    {
     "id": "a2",
@@ -486,7 +565,7 @@
     "qty": 5,
     "base": 200,
     "inc": 10,
-    "next": 200
+    "next": 210
    },
    {
     "id": "a8",
@@ -576,7 +655,7 @@
     "qty": 2,
     "base": 7000,
     "inc": 100,
-    "next": 7100
+    "next": 7200
    },
    {
     "id": "a18",
@@ -661,6 +740,17 @@
   },
   "b9ee5513-b65c-4741-92a4-2dee9f019e1b": {
    "role": "admin"
+  },
+  "a78b393b-a151-422f-8a51-e9ae97db05dd": {
+   "role": "admin"
+  },
+  "b9999d93-c761-4a3f-a604-5ada9a2a026f": {
+   "role": "team",
+   "u": "abc"
+  },
+  "9b411639-4f16-40ac-bc4a-ee31b7f0e04a": {
+   "role": "team",
+   "u": "abc"
   }
  }
 }
