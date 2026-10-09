@@ -1,5 +1,5 @@
 {
- "v": 767,
+ "v": 790,
  "mult": 2,
  "defaultCredits": 5000,
  "timer": {
@@ -10,11 +10,44 @@
   {
    "u": "aaa",
    "p": "123",
-   "credits": 333,
+   "credits": 33300,
    "inv": {}
+  },
+  {
+   "u": "abc",
+   "p": "123",
+   "credits": 322132,
+   "inv": {
+    "a6": 1
+   }
+  },
+  {
+   "u": "ddd",
+   "p": "1111",
+   "credits": 1044445,
+   "inv": {
+    "a12": 1
+   }
   }
  ],
- "orders": [],
+ "orders": [
+  {
+   "t": 1791529261704,
+   "team": "abc",
+   "item": "LDR",
+   "qty": 1,
+   "total": 122312,
+   "phase": "auction"
+  },
+  {
+   "t": 1791529037690,
+   "team": "ddd",
+   "item": "MG90 Servo",
+   "qty": 1,
+   "total": 66666,
+   "phase": "auction"
+  }
+ ],
  "components": [
   {
    "id": "c1",
@@ -68,15 +101,6 @@
  "auction": {
   "status": "live",
   "queue": [
-   "a17",
-   "a9",
-   "a2",
-   "a12",
-   "a6",
-   "a8",
-   "a8",
-   "a6",
-   "a1",
    "a17",
    "a7",
    "a1",
@@ -276,16 +300,111 @@
    "a6"
   ],
   "lot": {
-   "itemId": "a9",
-   "name": "Buzzer",
-   "start": 50,
-   "time": 30,
-   "bid": 0,
-   "leader": null,
-   "endsAt": 1791527457843,
-   "remainingMs": null
+   "itemId": "a1",
+   "name": "Arduino Nano & Cable",
+   "start": 1000,
+   "time": 80,
+   "bid": 3000,
+   "leader": "ddd",
+   "endsAt": 1791529358476,
+   "remainingMs": null,
+   "bids": [
+    {
+     "team": "ddd",
+     "bid": 3000
+    },
+    {
+     "team": "abc",
+     "bid": 2500
+    },
+    {
+     "team": "aaa",
+     "bid": 2000
+    }
+   ]
   },
   "history": [
+   {
+    "t": 1791529278476,
+    "itemId": "a6",
+    "name": "LDR",
+    "start": 120,
+    "price": 0,
+    "team": null,
+    "sold": false
+   },
+   {
+    "t": 1791529271839,
+    "itemId": "a8",
+    "name": "Ultrasonic",
+    "start": 220,
+    "price": 0,
+    "team": null,
+    "sold": false
+   },
+   {
+    "t": 1791529268875,
+    "itemId": "a8",
+    "name": "Ultrasonic",
+    "start": 210,
+    "price": 0,
+    "team": null,
+    "sold": false
+   },
+   {
+    "t": 1791529261704,
+    "itemId": "a6",
+    "name": "LDR",
+    "start": 110,
+    "price": 122312,
+    "team": "abc",
+    "sold": true
+   },
+   {
+    "t": 1791529037690,
+    "itemId": "a12",
+    "name": "MG90 Servo",
+    "start": 1500,
+    "price": 66666,
+    "team": "ddd",
+    "sold": true
+   },
+   {
+    "t": 1791528837026,
+    "itemId": "a2",
+    "name": "ESP & Cable",
+    "start": 2000,
+    "price": 0,
+    "team": null,
+    "sold": false
+   },
+   {
+    "t": 1791528366326,
+    "itemId": "a9",
+    "name": "Buzzer",
+    "start": 55,
+    "price": 0,
+    "team": null,
+    "sold": false
+   },
+   {
+    "t": 1791528323010,
+    "itemId": "a17",
+    "name": "Chassis Kit",
+    "start": 7000,
+    "price": 0,
+    "team": null,
+    "sold": false
+   },
+   {
+    "t": 1791527850908,
+    "itemId": "a9",
+    "name": "Buzzer",
+    "start": 50,
+    "price": 0,
+    "team": null,
+    "sold": false
+   },
    {
     "t": 1791527427843,
     "itemId": "a6",
@@ -313,7 +432,7 @@
     "qty": 10,
     "base": 1000,
     "inc": 50,
-    "next": 1000
+    "next": 1050
    },
    {
     "id": "a2",
@@ -322,7 +441,7 @@
     "qty": 10,
     "base": 2000,
     "inc": 100,
-    "next": 2000
+    "next": 2100
    },
    {
     "id": "a3",
@@ -358,7 +477,7 @@
     "qty": 40,
     "base": 100,
     "inc": 10,
-    "next": 110
+    "next": 130
    },
    {
     "id": "a7",
@@ -376,7 +495,7 @@
     "qty": 40,
     "base": 200,
     "inc": 10,
-    "next": 210
+    "next": 230
    },
    {
     "id": "a9",
@@ -385,7 +504,7 @@
     "qty": 40,
     "base": 50,
     "inc": 5,
-    "next": 55
+    "next": 60
    },
    {
     "id": "a10",
@@ -412,7 +531,7 @@
     "qty": 4,
     "base": 1500,
     "inc": 50,
-    "next": 1500
+    "next": 1550
    },
    {
     "id": "a13",
@@ -457,7 +576,7 @@
     "qty": 2,
     "base": 7000,
     "inc": 100,
-    "next": 7000
+    "next": 7100
    },
    {
     "id": "a18",
@@ -539,6 +658,9 @@
   "a6015b9d-8758-4f7a-9039-d9d3a1140210": {
    "role": "team",
    "u": "aaa"
+  },
+  "b9ee5513-b65c-4741-92a4-2dee9f019e1b": {
+   "role": "admin"
   }
  }
 }

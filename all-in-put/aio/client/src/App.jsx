@@ -88,7 +88,7 @@ const Home = ({ api, setTok, setRole, showToast, tok, role, me, logout }) => {
 const Shop = ({ pub, me, setMe, ph, priceOf, api, showToast, tok, role, logout }) => {
   const [tab, setTab] = useState('shop');
   const [qtys, setQtys] = useState({});
-  
+
   if (!pub) return <div className="wrap">Loading...</div>;
   const { p, left } = ph();
 
@@ -125,7 +125,7 @@ const Shop = ({ pub, me, setMe, ph, priceOf, api, showToast, tok, role, logout }
           <span style={{ flex: 1 }}></span>
           <span style={{ padding: '14px 0' }} className="mono">Credits <b className="red" style={{ fontSize: '18px' }}>{me ? fmt(me.credits) : '…'}</b></span>
         </div>
-        
+
         {tab === 'shop' && (
           <div className="grid">
             {pub.components.map(x => (
@@ -134,7 +134,7 @@ const Shop = ({ pub, me, setMe, ph, priceOf, api, showToast, tok, role, logout }
                 <div className="price">{fmt(priceOf(x.base))}</div>
                 <div className="mono mut">per unit</div>
                 <div className="row">
-                  <input type="number" min="1" value={qtys[x.id] || 1} onChange={e => setQtys({...qtys, [x.id]: e.target.value})} disabled={x.soldOut} />
+                  <input type="number" min="1" value={qtys[x.id] || 1} onChange={e => setQtys({ ...qtys, [x.id]: e.target.value })} disabled={x.soldOut} />
                   <button className="btn sm buy" disabled={x.soldOut || p === 'idle'} onClick={() => buy(x.id, qtys[x.id] || 1)}>
                     {x.soldOut ? 'Sold out' : 'Buy'}
                   </button>
@@ -203,7 +203,7 @@ const AuctionAdmin = ({ adm, pub, api, load, showToast, now }) => {
   };
   const move = (i, d) => {
     const j = i + d; if (j < 0 || j >= lq.length) return;
-    const n = [...lq]; [n[i], n[j]] = [n[j], n[i]]; saveQueue(n);
+    const n = [...lq];[n[i], n[j]] = [n[j], n[i]]; saveQueue(n);
   };
   const toTop = i => { const n = [...lq]; const [x] = n.splice(i, 1); n.unshift(x); saveQueue(n); };
   const remove = i => saveQueue(lq.filter((_, k) => k !== i));
@@ -456,15 +456,11 @@ const AuctionDisplay = ({ pub, now }) => {
   const isPaused = !isDemo && (a.status === 'paused');
   const isLive = isDemo || (a.status === 'live');
 
-  // Build top-3 from recent history (bids recorded in history, current lot leader as #1)
-  let top3 = isDemo ? DEMO_BIDDERS : [];
-  if (!isDemo && lot?.leader) {
-    // current lot leader is always top
+  // Top 3 bidders for the active lot are now tracked on the server
+  let top3 = isDemo ? DEMO_BIDDERS : (lot?.bids || []);
+  if (!isDemo && top3.length === 0 && lot?.leader) {
+    // Fallback if bids array isn't populated yet
     top3 = [{ team: lot.leader, bid: lot.bid }];
-    // fill from recent sold history for demo richness
-    (a.recent || []).filter(h => h.sold && h.team && h.team !== lot.leader).slice(0, 2).forEach(h => {
-      top3.push({ team: h.team, bid: h.price });
-    });
   }
 
   // Pulse on new bid
@@ -480,6 +476,15 @@ const AuctionDisplay = ({ pub, now }) => {
 
   const compImg = getCompImg(lot?.name ?? '');
   const recent = isDemo ? DEMO_RECENT : (a.recent || []);
+
+  const getTimesUpText = () => {
+    if (!lot.leader) return 'NO BIDS PLACED';
+    if (!lot.endsAt) return 'GOING ONCE…';
+    const past = now - lot.endsAt;
+    if (past < 2500) return 'GOING ONCE…';
+    if (past < 5000) return 'GOING TWICE…';
+    return 'SOLD!';
+  };
 
   return (
     <div className="auc-disp">
@@ -530,13 +535,11 @@ const AuctionDisplay = ({ pub, now }) => {
 
             {/* Name */}
             <div className="auc-comp-name">{lot.name}</div>
-            <div className="auc-base-price">Base Price: {fmt(lot.start)}</div>
 
-            {/* Current bid — focal point */}
-            <div className={`auc-bid-block${pulse ? ' auc-bid-pulse' : ''}`}>
-              <div className="auc-bid-label">CURRENT BID</div>
-              <div className="auc-bid-amount">{lot.leader ? fmt(lot.bid) : '—'}</div>
-              <div className="auc-bid-team">{lot.leader ? `↑ ${lot.leader}` : 'No bids placed yet'}</div>
+            {/* Base Price — focal point */}
+            <div className="auc-bid-block" style={{ maxWidth: '460px' }}>
+              <div className="auc-bid-label" style={{ color: 'var(--mut)' }}>BASE PRICE</div>
+              <div className="auc-bid-amount" style={{ fontSize: '110px', color: 'var(--cream)' }}>{fmt(lot.start)}</div>
             </div>
           </div>
 
@@ -544,8 +547,8 @@ const AuctionDisplay = ({ pub, now }) => {
           <div className="auc-center">
             <div style={{ textAlign: 'center', width: '100%' }}>
               <div className="mono mut" style={{ marginBottom: '12px' }}>// TIME LEFT</div>
-              <div className="clock" style={{ color: (clk.low || clk.up) ? 'var(--red)' : isPaused ? 'var(--mut)' : 'var(--cream)', fontSize: '84px' }}>{clk.text}</div>
-              {clk.up && <div className="auc-times-up" style={{ marginTop: '10px' }}>GOING ONCE…</div>}
+              <div className="clock" style={{ color: (clk.low || clk.up) ? 'var(--red)' : isPaused ? 'var(--mut)' : 'var(--cream)', fontSize: '110px' }}>{clk.text}</div>
+              {clk.up && <div className="auc-times-up" style={{ marginTop: '10px', fontSize: '15px' }}>{getTimesUpText()}</div>}
               {lot.time === 0 && <div className="auc-no-limit" style={{ marginTop: '10px' }}>NO TIME LIMIT</div>}
             </div>
 
@@ -554,25 +557,16 @@ const AuctionDisplay = ({ pub, now }) => {
               {isPaused ? '⏸ PAUSED' : clk.up ? "⚠ TIME'S UP" : '⚡ BIDDING OPEN'}
             </div>
 
-            {/* Recent results mini */}
-            {recent.length > 0 && (
-              <div className="auc-recent">
-                <div className="auc-recent-label">RECENTLY CLOSED</div>
-                {recent.slice(0, 3).map((h, i) => (
-                  <div key={i} className="auc-recent-row">
-                    <span className="auc-recent-name">{h.name}</span>
-                    {h.sold
-                      ? <><span className="auc-recent-price">{fmt(h.price)}</span><span className="auc-recent-team">{h.team}</span></>
-                      : <span className="auc-recent-unsold">UNSOLD</span>
-                    }
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* Current bid — focal point */}
+            <div className={`auc-bid-block${pulse ? ' auc-bid-pulse' : ''}`} style={{ maxWidth: '460px', marginTop: '30px' }}>
+              <div className="auc-bid-label">CURRENT BID</div>
+              <div className="auc-bid-amount" style={{ fontSize: '110px' }}>{lot.leader ? fmt(lot.bid) : '—'}</div>
+              <div className="auc-bid-team" style={{ fontSize: '14px' }}>{lot.leader ? `↑ ${lot.leader}` : 'No bids placed yet'}</div>
+            </div>
           </div>
 
           {/* RIGHT — top 3 */}
-          <div className="auc-right">
+          <div className="auc-right" style={{ justifyContent: 'center' }}>
             <div className="mono red" style={{ marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--line)' }}>// Top Bidders</div>
             {top3.length === 0 ? (
               <div className="mut">No bids yet</div>
@@ -581,18 +575,18 @@ const AuctionDisplay = ({ pub, now }) => {
                 <tbody>
                   {top3.slice(0, 3).map((b, i) => (
                     <tr key={i} style={{ borderBottom: i === 2 ? 'none' : '1px solid var(--line)' }}>
-                      <td className="mono mut" style={{ width: '30px' }}>{i + 1}</td>
-                      <td style={{ fontWeight: i === 0 ? 'bold' : 'normal', fontSize: i === 0 ? '16px' : '14px' }}>
-                        {b.team} {i === 0 && <span className="tag sm d" style={{marginLeft: '8px'}}>LEADER</span>}
+                      <td className="mono mut" style={{ width: '40px', fontSize: '24px', padding: '20px 0' }}>{i + 1}</td>
+                      <td style={{ fontWeight: i === 0 ? 'bold' : 'normal', fontSize: i === 0 ? '28px' : '22px', padding: '20px 0' }}>
+                        {b.team} {i === 0 && <span className="tag sm d" style={{ marginLeft: '12px' }}>LEADER</span>}
                       </td>
-                      <td className="price" style={{ fontSize: '20px', textAlign: 'right' }}>{fmt(b.bid)}</td>
+                      <td className="price" style={{ fontSize: i === 0 ? '36px' : '26px', textAlign: 'right', padding: '20px 0' }}>{fmt(b.bid)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             )}
             {/* Lot counter */}
-            <div style={{ marginTop: 'auto', textAlign: 'center', paddingTop: '20px', borderTop: '1px solid var(--line)' }}>
+            <div style={{ marginTop: '40px', textAlign: 'center', paddingTop: '20px', borderTop: '1px solid var(--line)' }}>
               <div className="mono mut">Lot</div>
               <div style={{ fontSize: '38px', fontWeight: 'bold' }}>#{(a.done ?? 0) + 1}</div>
             </div>
@@ -608,7 +602,7 @@ const AuctionDisplay = ({ pub, now }) => {
 const Admin = ({ adm, pub, ph, priceOf, api, load, showToast, tok, role, me, logout, now }) => {
   const [selectedAdminFilter, setSelectedAdminFilter] = useState('all');
   const [activeModalTeam, setActiveModalTeam] = useState(null);
-  
+
   const [bm, setBm] = useState('');
   const [mu, setMu] = useState('');
   const [dc, setDc] = useState('');
@@ -677,7 +671,7 @@ const Admin = ({ adm, pub, ph, priceOf, api, load, showToast, tok, role, me, log
             </div>
             <label>Base-price minutes<input type="number" min="1" value={bm} onChange={e => setBm(e.target.value)} /></label>
             <button className="btn r" onClick={() => post('admin/timer', { action: 'start', baseMin: bm }, 'Timer started')}>▶ Start</button>
-            <button className="btn o" onClick={() => { if(window.confirm('Reset the timer? The shop will lock.')) post('admin/timer', { action: 'reset', baseMin: bm }, 'Timer reset') }}>Reset</button>
+            <button className="btn o" onClick={() => { if (window.confirm('Reset the timer? The shop will lock.')) post('admin/timer', { action: 'reset', baseMin: bm }, 'Timer reset') }}>Reset</button>
             <button className="btn o" onClick={() => post('admin/timer', { action: '', baseMin: bm }, 'Saved')}>Save minutes</button>
           </div>
         </div>
@@ -719,7 +713,7 @@ const Admin = ({ adm, pub, ph, priceOf, api, load, showToast, tok, role, me, log
             <button className="btn" onClick={() => { post('admin/team-add', { u: tn, p: tp, credits: tc }, 'Team added'); setTn(''); setTp(''); setTc(''); }}>Add team</button>
           </div>
         </div>
-        
+
         <div className="panel">
           <table>
             <tbody>
@@ -741,7 +735,7 @@ const Admin = ({ adm, pub, ph, priceOf, api, load, showToast, tok, role, me, log
                         const r = e.target.closest('tr');
                         post('admin/team-edit', { u: t.u, p: r.querySelector('.tp').value, credits: r.querySelector('.tc').value }, 'Updated');
                       }}>Update</button>
-                      <button className="btn sm o" onClick={() => { if(window.confirm('Delete team '+t.u+'?')) post('admin/team-del', { u: t.u }); }}>Delete</button>
+                      <button className="btn sm o" onClick={() => { if (window.confirm('Delete team ' + t.u + '?')) post('admin/team-del', { u: t.u }); }}>Delete</button>
                     </td>
                   </tr>
                 );
@@ -764,7 +758,7 @@ const Admin = ({ adm, pub, ph, priceOf, api, load, showToast, tok, role, me, log
             <button className="btn sm o" onClick={resetOrders} style={{ borderColor: 'var(--red)', color: 'var(--red)' }}>Clear Orders</button>
           </div>
         </div>
-        
+
         <div className="panel">
           <table>
             <tbody>
@@ -803,7 +797,7 @@ const Admin = ({ adm, pub, ph, priceOf, api, load, showToast, tok, role, me, log
                 </div>
                 <button className="close-btn" onClick={() => setActiveModalTeam(null)}>✕</button>
               </div>
-              
+
               <div className="stat-box">
                 <div className="stat-card"><div className="mono mut">Current Balance</div><div className="val red">{fmt(tObj.credits)}</div></div>
                 <div className="stat-card"><div className="mono mut">Total Spent</div><div className="val">{fmt(totalSpent)}</div></div>
@@ -839,7 +833,7 @@ const Admin = ({ adm, pub, ph, priceOf, api, load, showToast, tok, role, me, log
                   </tbody>
                 </table>
               </div>
-              
+
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '8px' }}>
                 <button className="btn sm o" onClick={() => setActiveModalTeam(null)}>Close</button>
               </div>
@@ -892,7 +886,7 @@ export default function App() {
   const [adm, setAdm] = useState(null);
   const [off, setOff] = useState(0);
   const [toastMsg, setToastMsg] = useState('');
-  
+
   const [nowUi, setNowUi] = useState(Date.now() + off);
   const lastV = useRef(-1);
 
@@ -935,9 +929,9 @@ export default function App() {
 
   const load = async () => {
     if (tok && role === 'admin') {
-      try { const data = await api('admin/state'); setAdm(data); } catch(e) {}
+      try { const data = await api('admin/state'); setAdm(data); } catch (e) { }
     } else if (tok && role === 'team') {
-      try { const data = await api('me'); setMe(data); } catch(e) {}
+      try { const data = await api('me'); setMe(data); } catch (e) { }
     }
   };
 
@@ -987,10 +981,10 @@ export default function App() {
     <>
       <Toast message={toastMsg} />
       {route === 'display' ? <Display pub={pub} ph={ph} priceOf={priceOf} /> :
-       route === 'auction-display' ? <AuctionDisplay pub={pub} now={nowUi} /> :
-       route === 'admin' && role === 'admin' ? <Admin adm={adm} pub={pub} ph={ph} priceOf={priceOf} api={api} load={load} showToast={showToast} tok={tok} role={role} me={me} logout={logout} now={nowUi} /> :
-       route === 'shop' && role === 'team' ? <Shop pub={pub} me={me} setMe={setMe} ph={ph} priceOf={priceOf} api={api} showToast={showToast} tok={tok} role={role} logout={logout} /> :
-       <Home api={api} setTok={setTok} setRole={setRole} showToast={showToast} tok={tok} role={role} me={me} logout={logout} />}
+        route === 'auction-display' ? <AuctionDisplay pub={pub} now={nowUi} /> :
+          route === 'admin' && role === 'admin' ? <Admin adm={adm} pub={pub} ph={ph} priceOf={priceOf} api={api} load={load} showToast={showToast} tok={tok} role={role} me={me} logout={logout} now={nowUi} /> :
+            route === 'shop' && role === 'team' ? <Shop pub={pub} me={me} setMe={setMe} ph={ph} priceOf={priceOf} api={api} showToast={showToast} tok={tok} role={role} logout={logout} /> :
+              <Home api={api} setTok={setTok} setRole={setRole} showToast={showToast} tok={tok} role={role} me={me} logout={logout} />}
     </>
   );
 }

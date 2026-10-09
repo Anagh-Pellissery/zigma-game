@@ -32,7 +32,7 @@ const pub=()=>({v:S.v,now:Date.now(),startedAt:S.timer.startedAt,baseMs:S.timer.
  auctionItems:S.auction.items.map(i=>({id:i.id,name:i.name})),auction:aucPub()});
 const aucItem=id=>S.auction.items.find(i=>i.id===id);
 const aucPub=()=>{const A=S.auction,l=A.lot;return{status:A.status,left:A.queue.length,
- lot:l?{name:l.name,start:l.start,bid:l.bid,leader:l.leader,time:l.time,endsAt:l.endsAt,remainingMs:l.remainingMs}:null,
+ lot:l?{name:l.name,start:l.start,bid:l.bid,leader:l.leader,time:l.time,endsAt:l.endsAt,remainingMs:l.remainingMs,bids:l.bids||[]}:null,
  recent:A.history.slice(0,6).map(h=>({name:h.name,price:h.price,team:h.team,sold:h.sold})),
  sold:A.history.filter(h=>h.sold).length,done:A.history.length}};
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
@@ -41,7 +41,7 @@ function aucNext(){const A=S.auction;
  if(!A.queue.length){A.lot=null;A.status='done';return}
  const it=aucItem(A.queue.shift());if(!it)return aucNext();
  const now=Date.now(),ms=it.time>0?it.time*1000:0;
- A.lot={itemId:it.id,name:it.name,start:it.next,time:it.time,bid:0,leader:null,endsAt:ms?now+ms:null,remainingMs:null};
+ A.lot={itemId:it.id,name:it.name,start:it.next,time:it.time,bid:0,leader:null,endsAt:ms?now+ms:null,remainingMs:null,bids:[]};
  it.next+=it.inc;A.status='live'}
 const clients=new Set();
 function push(){const m='data:'+JSON.stringify(pub())+'\n\n';clients.forEach(r=>r.write(m))}
@@ -107,7 +107,12 @@ http.createServer(async(req,res)=>{
   else if(a==='admin/auction-bid'){const A=S.auction,l=A.lot,t=team(b.team),amt=Math.floor(+b.amount);
    if(A.status!=='live'||!l)throw'No live lot';if(l.endsAt&&Date.now()>l.endsAt)throw'Time is up for this lot';
    if(!t)throw'Pick a team';if(!(amt>=l.start))throw'Bid must be at least '+l.start;if(l.leader&&amt<=l.bid)throw'Bid must beat '+l.bid;
-   if(t.credits<amt)throw'Team does not have enough credits';l.bid=amt;l.leader=t.u}
+   if(t.credits<amt)throw'Team does not have enough credits';
+   l.bid=amt;l.leader=t.u;
+   l.bids = (l.bids || []).filter(x => x.team !== t.u);
+   l.bids.push({team: t.u, bid: amt});
+   l.bids = l.bids.sort((a,b)=>b.bid-a.bid).slice(0,3);
+  }
   else if(a==='admin/auction-resolve'){const A=S.auction,l=A.lot;
    if(!l||(A.status!=='live'&&A.status!=='paused'))throw'No lot to close';
    if(b.sold){const t=team(l.leader);if(!t)throw'Nobody has bid on this lot';if(t.credits<l.bid)throw'Team no longer has enough credits';

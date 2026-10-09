@@ -569,7 +569,7 @@ h2 {
 .auc-main-layout {
   flex: 1;
   display: grid;
-  grid-template-columns: 1fr 320px 280px;
+  grid-template-columns: 1fr 450px 1fr;
   min-height: 0;
 }
 
