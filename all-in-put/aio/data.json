@@ -1,5 +1,5 @@
 {
- "v": 801,
+ "v": 803,
  "mult": 2,
  "defaultCredits": 5000,
  "timer": {
@@ -16,12 +16,13 @@
   {
    "u": "abc",
    "p": "123",
-   "credits": 313962,
+   "credits": 312776,
    "inv": {
-    "a6": 1,
+    "a6": 2,
     "c3": 11,
     "a17": 1,
-    "a7": 1
+    "a7": 1,
+    "a1": 1
    }
   },
   {
@@ -35,6 +36,22 @@
   }
  ],
  "orders": [
+  {
+   "t": 1791530949900,
+   "team": "abc",
+   "item": "LDR",
+   "qty": 1,
+   "total": 136,
+   "phase": "auction"
+  },
+  {
+   "t": 1791530872282,
+   "team": "abc",
+   "item": "Arduino Nano & Cable",
+   "qty": 1,
+   "total": 1050,
+   "phase": "auction"
+  },
   {
    "t": 1791530770628,
    "team": "abc",
@@ -169,8 +186,6 @@
  "auction": {
   "status": "live",
   "queue": [
-   "a6",
-   "a16",
    "a5",
    "a5",
    "a1",
@@ -365,17 +380,35 @@
    "a6"
   ],
   "lot": {
-   "itemId": "a1",
-   "name": "Arduino Nano & Cable",
-   "start": 1050,
-   "time": 80,
+   "itemId": "a16",
+   "name": "Potentiometer (1M)",
+   "start": 20,
+   "time": 20,
    "bid": 0,
    "leader": null,
-   "endsAt": 1791530850628,
+   "endsAt": 1791530969900,
    "remainingMs": null,
    "bids": []
   },
   "history": [
+   {
+    "t": 1791530949900,
+    "itemId": "a6",
+    "name": "LDR",
+    "start": 130,
+    "price": 136,
+    "team": "abc",
+    "sold": true
+   },
+   {
+    "t": 1791530872282,
+    "itemId": "a1",
+    "name": "Arduino Nano & Cable",
+    "start": 1050,
+    "price": 1050,
+    "team": "abc",
+    "sold": true
+   },
    {
     "t": 1791530770628,
     "itemId": "a7",
@@ -556,7 +589,7 @@
     "qty": 40,
     "base": 100,
     "inc": 10,
-    "next": 130
+    "next": 140
    },
    {
     "id": "a7",
@@ -646,7 +679,7 @@
     "qty": 10,
     "base": 20,
     "inc": 5,
-    "next": 20
+    "next": 25
    },
    {
     "id": "a17",
