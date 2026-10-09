@@ -1,5 +1,5 @@
 {
- "v": 803,
+ "v": 804,
  "mult": 2,
  "defaultCredits": 5000,
  "timer": {
@@ -384,11 +384,16 @@
    "name": "Potentiometer (1M)",
    "start": 20,
    "time": 20,
-   "bid": 0,
-   "leader": null,
+   "bid": 20,
+   "leader": "abc",
    "endsAt": 1791530969900,
    "remainingMs": null,
-   "bids": []
+   "bids": [
+    {
+     "team": "abc",
+     "bid": 20
+    }
+   ]
   },
   "history": [
    {
@@ -784,6 +789,9 @@
   "9b411639-4f16-40ac-bc4a-ee31b7f0e04a": {
    "role": "team",
    "u": "abc"
+  },
+  "d4fb039b-cba3-4697-96f4-18e6c5770916": {
+   "role": "admin"
   }
  }
 }
