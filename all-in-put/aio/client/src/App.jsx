@@ -79,11 +79,6 @@ const Home = ({ api, setTok, setRole, showToast, tok, role, me, logout, isAdminL
               <input type="password" placeholder="Password" required value={p} onChange={e => setP(e.target.value)} />
               <button className="btn">Enter portal →</button>
             </form>
-            <div style={{ marginTop: '20px' }}>
-              {isAdminLogin && (
-                <a href="#/" className="mut mono" style={{ fontSize: '14px', textDecoration: 'underline' }}>← Back to Team Login</a>
-              )}
-            </div>
           </div>
           <div className="hero-img-wrap">
             <div className="red-circle"></div>
