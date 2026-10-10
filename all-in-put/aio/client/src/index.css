@@ -936,3 +936,9 @@ h2 {
   .auc-photo-wrap { max-width: 200px; }
   .auc-topbar { padding: 0 16px; }
 }
+
+/* team live-auction view: bidding panel + top bidders side by side, stacked on phones */
+.team-auc-grid { grid-template-columns: 1fr 400px; }
+@media (max-width: 800px) {
+  .team-auc-grid { grid-template-columns: 1fr; }
+}

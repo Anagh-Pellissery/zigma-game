@@ -196,12 +196,14 @@ const MyKit = ({ pub, me, tok, role, logout }) => {
   );
 };
 
-const TeamAuction = ({ pub, me, api, showToast, tok, role, logout }) => {
+const TeamAuction = ({ pub, me, api, showToast, tok, role, logout, now }) => {
   const [customBid, setCustomBid] = useState('');
   if (!pub) return <div className="wrap">Loading...</div>;
 
   const a = pub.auction;
   const lot = a?.lot;
+  const clk = aucClock(lot, a?.status, now);
+  const compImg = getCompImg(lot?.name);
   const inc = lot?.inc || 0;
   const minBid = lot ? (lot.leader ? lot.bid + inc : lot.start) : 0;
 
@@ -237,13 +239,24 @@ const TeamAuction = ({ pub, me, api, showToast, tok, role, logout }) => {
             <div className="auc-idle-sub">Stand by for the first lot…</div>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 400px', gap: '24px', flex: 1, minHeight: 0 }}>
+          <div className="team-auc-grid" style={{ display: 'grid', gap: '24px', flex: 1, minHeight: 0 }}>
             <div className="panel" style={{ display: 'flex', flexDirection: 'column', gap: '20px', height: '100%' }}>
-              <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                <div style={{ fontSize: '50px' }}>📦</div>
-                <div>
+              <div style={{ display: 'flex', gap: '20px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <div style={{ width: '140px', height: '140px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {compImg
+                    ? <img src={compImg} alt={lot.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                    : <div style={{ fontSize: '50px' }}>📦</div>}
+                </div>
+                <div style={{ flex: 1, minWidth: '180px' }}>
                   <h3 style={{ fontSize: '28px', margin: '0 0 8px 0' }}>{lot.name}</h3>
                   <div className="mono mut">Starting Bid: {fmt(lot.start)} &nbsp;|&nbsp; Increment: {fmt(inc)}</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div className="mono mut" style={{ marginBottom: '6px' }}>// TIME LEFT</div>
+                  <div className="clock" style={{ fontSize: '64px', color: (clk.low || clk.up) ? 'var(--red)' : a.status === 'paused' ? 'var(--mut)' : 'var(--cream)' }}>{clk.text}</div>
+                  {a.status === 'paused' && <div className="mono mut" style={{ marginTop: '6px' }}>PAUSED</div>}
+                  {clk.up && <div className="auc-times-up" style={{ marginTop: '6px', fontSize: '13px' }}>TIME'S UP</div>}
+                  {lot.time === 0 && <div className="auc-no-limit" style={{ marginTop: '6px' }}>NO TIME LIMIT</div>}
                 </div>
               </div>
               <div style={{ borderTop: '1px solid var(--line)', paddingTop: '20px', flex: 1 }}>
@@ -605,6 +618,7 @@ const AuctionDisplay = ({ pub, now }) => {
 
   const compImg = getCompImg(lot?.name ?? '');
   const recent = isDemo ? DEMO_RECENT : (a.recent || []);
+  const lastLot = isDemo ? null : a.lastLot;
 
   const getTimesUpText = () => {
     if (!lot.leader) return 'NO BIDS PLACED';
@@ -708,7 +722,7 @@ const AuctionDisplay = ({ pub, now }) => {
           </div>
 
           {/* RIGHT — top 3 */}
-          <div className="auc-right" style={{ justifyContent: 'center' }}>
+          <div className="auc-right" style={{ justifyContent: 'flex-start', overflowY: 'auto' }}>
             <div className="mono red" style={{ marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid var(--line)' }}>// Top Bidders</div>
             {top3.length === 0 ? (
               <div className="mut">No bids yet</div>
@@ -726,6 +740,26 @@ const AuctionDisplay = ({ pub, now }) => {
                   ))}
                 </tbody>
               </table>
+            )}
+            {/* Balances of every team that bid on the previous lot */}
+            {lastLot && (
+              <div style={{ marginTop: '32px' }}>
+                <div className="mono red" style={{ marginBottom: '12px', paddingBottom: '10px', borderBottom: '1px solid var(--line)' }}>// Balances after {lastLot.name}</div>
+                {lastLot.teams.length === 0 ? (
+                  <div className="mut">No bids on {lastLot.name}</div>
+                ) : (
+                  <table style={{ width: '100%' }}>
+                    <tbody>
+                      {lastLot.teams.map((t, i) => (
+                        <tr key={t.team} style={{ borderBottom: i === lastLot.teams.length - 1 ? 'none' : '1px solid var(--line)' }}>
+                          <td style={{ fontSize: '20px', padding: '10px 0' }}>{t.team}</td>
+                          <td className="mono" style={{ fontSize: '22px', textAlign: 'right', padding: '10px 0' }}>{fmt(t.credits)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
             )}
             {/* Lot counter */}
             <div style={{ marginTop: '40px', textAlign: 'center', paddingTop: '20px', borderTop: '1px solid var(--line)' }}>
@@ -1409,7 +1443,7 @@ export default function App() {
             route === 'shop' && role === 'team' ? <Shop pub={pub} me={me} setMe={setMe} ph={ph} priceOf={priceOf} api={api} showToast={showToast} tok={tok} role={role} logout={logout} /> :
               route === 'kit' && role === 'team' ? <MyKit pub={pub} me={me} tok={tok} role={role} logout={logout} /> :
                 route === 'trade' && role === 'team' ? <TeamTrading pub={pub} me={me} setMe={setMe} api={api} showToast={showToast} tok={tok} role={role} logout={logout} /> :
-                  route === 'auction' && role === 'team' ? <TeamAuction pub={pub} me={me} api={api} showToast={showToast} tok={tok} role={role} logout={logout} /> :
+                  route === 'auction' && role === 'team' ? <TeamAuction pub={pub} me={me} api={api} showToast={showToast} tok={tok} role={role} logout={logout} now={nowUi} /> :
                     <Home api={api} setTok={setTok} setRole={setRole} showToast={showToast} tok={tok} role={role} me={me} logout={logout} isAdminLogin={route === 'admin-login'} />}
     </>
   );

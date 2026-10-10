@@ -86,6 +86,10 @@ create table if not exists auction_state (
   lot_remaining_ms int,
   lot_bids jsonb not null default '[]'
 );
+-- every team that bid on the lot on the block, and the same for the lot before it (shown with balances on the display)
+alter table auction_state add column if not exists lot_bidders bigint[] not null default '{}';
+alter table auction_state add column if not exists last_lot_name text;
+alter table auction_state add column if not exists last_lot_bidders bigint[] not null default '{}';
 
 create table if not exists auction_history (
   id bigint generated always as identity primary key,
@@ -210,6 +214,9 @@ begin
         'inc', coalesce((select inc from auction_items where id = a.lot_item_id), 0)) end,
       'recent', coalesce((select jsonb_agg(jsonb_build_object('name', h.name, 'price', h.price, 'team', h.team_name, 'sold', h.sold) order by h.id desc)
                           from (select * from auction_history order by id desc limit 6) h), '[]'),
+      'lastLot', case when a.last_lot_name is null then null else jsonb_build_object('name', a.last_lot_name,
+        'teams', coalesce((select jsonb_agg(jsonb_build_object('team', t.username, 'credits', t.credits) order by t.credits desc)
+                           from teams t where t.id = any(a.last_lot_bidders)), '[]')) end,
       'sold', (select count(*) from auction_history where sold),
       'done', (select count(*) from auction_history)));
   update public_state set v = v + 1, data = d || jsonb_build_object('v', v + 1) where id = 1;
@@ -218,8 +225,16 @@ end $$;
 create or replace function _clear_lot(p_status text) returns void
 language sql set search_path = public as $$
   update auction_state set status = p_status, lot_item_id = null, lot_name = null, lot_start = null, lot_time = null,
-    lot_bid = 0, lot_leader_id = null, lot_leader_name = null, lot_ends_at = null, lot_remaining_ms = null, lot_bids = '[]'
+    lot_bid = 0, lot_leader_id = null, lot_leader_name = null, lot_ends_at = null, lot_remaining_ms = null, lot_bids = '[]',
+    lot_bidders = '{}'
   where id = 1
+$$;
+
+-- remember who bid on the lot that is closing, before the next one replaces it
+create or replace function _archive_lot() returns void
+language sql set search_path = public as $$
+  update auction_state set last_lot_name = lot_name, last_lot_bidders = lot_bidders
+  where id = 1 and lot_item_id is not null
 $$;
 
 -- give the current highest bid back to its team
@@ -243,7 +258,7 @@ begin
       update auction_state set status = 'live', lot_item_id = it.id, lot_name = it.name, lot_start = it.next_price,
         lot_time = it.time_sec, lot_bid = 0, lot_leader_id = null, lot_leader_name = null,
         lot_ends_at = case when it.time_sec > 0 then now() + make_interval(secs => it.time_sec) end,
-        lot_remaining_ms = null, lot_bids = '[]'
+        lot_remaining_ms = null, lot_bids = '[]', lot_bidders = '{}'
       where id = 1;
       update auction_items set next_price = next_price + inc where id = it.id;
       return;
@@ -273,7 +288,8 @@ begin
   perform _refund_leader();
   update teams set credits = credits - amt where id = t.id;
   update auction_state set lot_bid = amt, lot_leader_id = t.id, lot_leader_name = t.username,
-    lot_bids = (select coalesce(jsonb_agg(x order by (x->>'bid')::int desc), '[]') from (
+    lot_bidders = case when t.id = any(lot_bidders) then lot_bidders else lot_bidders || t.id end,
+    lot_bids =(select coalesce(jsonb_agg(x order by (x->>'bid')::int desc), '[]') from (
       select x from (
         select e.value as x from jsonb_array_elements(a.lot_bids) e where e.value->>'team' <> t.username
         union all select jsonb_build_object('team', t.username, 'bid', amt)
@@ -305,7 +321,7 @@ create or replace function _reset_auction() returns void
 language plpgsql set search_path = public as $$
 begin
   perform _clear_lot('idle');
-  update auction_state set queue = '{}' where id = 1;
+  update auction_state set queue = '{}', last_lot_name = null, last_lot_bidders = '{}' where id = 1;
   delete from auction_history where true;
   update auction_items set next_price = base where true;
 end $$;
@@ -553,6 +569,7 @@ begin
     insert into auction_history (item_id, name, start_price, price, team_name, sold)
       values (a.lot_item_id, a.lot_name, a.lot_start, case when sold then a.lot_bid else 0 end,
               case when sold then a.lot_leader_name end, sold);
+    perform _archive_lot();
     perform _auc_next();
 
   elsif p_action = 'auction-reset' then
@@ -566,6 +583,7 @@ begin
       perform _refund_leader();
       insert into auction_history (item_id, name, start_price, price, team_name, sold)
         values (a.lot_item_id, a.lot_name, a.lot_start, 0, null, false);
+      perform _archive_lot();
     end if;
     perform _clear_lot('done');
     update auction_state set queue = '{}' where id = 1;
@@ -642,7 +660,7 @@ declare f record;
 begin
   for f in select p.oid::regprocedure as sig from pg_proc p join pg_namespace ns on ns.oid = p.pronamespace
     where ns.nspname = 'public' and p.proname in ('_ms', 'server_now', '_num', 'game_phase', 'refresh_public_state',
-      '_clear_lot', '_refund_leader', '_auc_next', '_bid', '_buy', '_reset_auction', '_trading_open', '_trade_sell', '_trade_cancel', '_trade_buy', 'game_login', 'game_me',
+      '_clear_lot', '_archive_lot', '_refund_leader', '_auc_next', '_bid', '_buy', '_reset_auction', '_trading_open', '_trade_sell', '_trade_cancel', '_trade_buy', 'game_login', 'game_me',
       'game_team', 'admin_state', 'game_admin')
   loop
     execute format('revoke execute on function %s from public, anon, authenticated', f.sig);
