@@ -1,40 +1,123 @@
-# All-in Put
+<div align="center">
+  <h1>All-in Put 🎲</h1>
+  <p><strong>A Real-Time Auction & Trading Game Platform for Electronic Components</strong></p>
+</div>
 
-React (Vite) front end + one Vercel serverless function (`api/game.js`) + Supabase Postgres.
+---
 
-- All game rules (credits, stock, bids, timer phases) run inside Postgres functions in `supabase/schema.sql`.
-  Mutations are serialized with a lock, so many teams can bid/buy at the same moment safely.
-- The browser never gets write access: it can only read the `public_state` snapshot (live via Supabase Realtime)
-  and call the API, which checks a signed session token before calling the database with the secret key.
+**All-in Put** is a fast-paced team-based game where players buy and bid on electronic components (Arduinos, sensors, etc.). Built with React, Vite, and Vercel serverless functions, it heavily leverages **Supabase Postgres** for secure, real-time game state synchronization and transactions.
 
-## One-time database setup
+## 🚀 Features
 
-Supabase Dashboard → **SQL Editor** → paste all of `supabase/schema.sql` → **Run**.
-It creates the tables, locks them down, and seeds the shop components and auction items. Re-running it is safe.
+- **Live Auctions & Bidding**: Real-time bidding system with anti-snipe extensions and lot queuing.
+- **Component Shop**: Teams can buy fixed-price components with varying quantities.
+- **Team-to-Team Trading**: A player-driven marketplace to trade components.
+- **Admin Dashboard**: Full control over timers, lots, component prices, and team management.
+- **Bulletproof Concurrency**: Postgres row-level locks prevent race conditions when multiple teams bid simultaneously.
 
-## Environment variables
+## 🏗 Architecture
 
-| Name | Where | Notes |
-| --- | --- | --- |
-| `SUPABASE_URL` | server + build | project URL |
-| `SUPABASE_PUBLISHABLE_KEY` | build | baked into the browser bundle (read-only access to `public_state`) |
-| `SUPABASE_SECRET_KEY` | server only | never exposed to the browser |
-| `SESSION_SECRET` | server only | long random string; changing it logs everyone out |
-| `ADMIN_PASS` | server only | admin login is username `admin` + this password |
+The game is designed with a **Thin API, Thick Database** philosophy.
+- **Browser**: Reads a public snapshot directly from Supabase Realtime.
+- **API**: Validates team sessions and passes instructions to database RPCs.
+- **PostgreSQL**: Contains *all* game logic (auctions, validations, bidding, inventory).
 
-Locally these live in `client/.env` (git-ignored).
-
-## Run locally
-
+```mermaid
+sequenceDiagram
+    participant B as Browser (Team)
+    participant A as Vercel API
+    participant DB as Supabase (Postgres)
+    
+    B->>DB: Subscribes to public_state (Realtime)
+    DB-->>B: Broadcasts current state (Prices, Lots)
+    B->>A: POST /api/game?a=bid { amount: 1200 }
+    A->>A: Verify session token
+    A->>DB: rpc('game_team', { action: 'bid', ... })
+    Note over DB: Takes lock, validates funds & rules
+    DB-->>A: Return updated team info
+    DB-->>B: Broadcast updated public_state
 ```
+
+## 🛠️ Tech Stack
+
+| Frontend | Backend | Database | Deployment |
+| --- | --- | --- | --- |
+| React 19 | Node.js Serverless | PostgreSQL (Supabase) | Vercel |
+| Vite 6 | crypto (HMAC tokens)| Row-Level Security | Supabase Hosting |
+
+## 📦 Database Entity Relationship
+
+```mermaid
+erDiagram
+    TEAMS ||--o{ INVENTORY : owns
+    TEAMS ||--o{ ORDERS : places
+    TEAMS ||--o{ TRADING_LISTINGS : creates
+    TEAMS {
+        bigint id
+        text username
+        int credits
+    }
+    SHOP_COMPONENTS ||--o{ INVENTORY : is_part_of
+    SHOP_COMPONENTS {
+        text id
+        text name
+        int qty
+        int price
+    }
+    AUCTION_ITEMS {
+        text id
+        text name
+        int base
+        int inc
+    }
+    AUCTION_STATE {
+        text status
+        text lot_name
+        int lot_bid
+        text lot_leader_name
+    }
+```
+
+## 🚀 Getting Started
+
+### 1. One-time database setup
+
+1. Go to **Supabase Dashboard** → **SQL Editor**.
+2. Paste the contents of `supabase/schema.sql`.
+3. **Run** the script. This creates tables, locks them down, and seeds components.
+
+### 2. Environment Variables
+
+Create a `client/.env` file:
+
+| Variable | Where | Notes |
+| --- | --- | --- |
+| `SUPABASE_URL` | server + build | Your Supabase project URL |
+| `SUPABASE_PUBLISHABLE_KEY` | build | Read-only access to `public_state` for browsers |
+| `SUPABASE_SECRET_KEY` | server only | Never expose to the browser |
+| `SESSION_SECRET` | server only | Long random string (changing it logs out everyone) |
+| `ADMIN_PASS` | server only | Admin login uses username `admin` + this password |
+
+### 3. Run Locally
+
+```bash
 npm install
 npm run dev
 ```
 
-`npm run dev` serves the API too (see `vite.config.js`).
+`npm run dev` serves the Vite app and also mounts the Vercel API locally.
 
-## Deploy to Vercel
+### 4. Deploy to Vercel
 
-1. Import the repo in Vercel, set **Root Directory** to `all-in-put/aio/client` (framework: Vite).
-2. Add the five environment variables above (Production + Preview).
-3. Deploy. Routes: `/#/` team login, `/#/admin-login`, `/#/display` shop board, `/#/auction-display` auction board.
+1. Import the repository in Vercel.
+2. Set **Root Directory** to `all-in-put/aio/client`.
+3. Framework Preset: **Vite**.
+4. Add the 5 Environment Variables.
+5. Deploy!
+
+## 🎮 Routes
+
+- `/#/` — Team login and dashboard
+- `/#/admin-login` — Administrator panel
+- `/#/display` — Public Shop Board
+- `/#/auction-display` — Public Auction Board
