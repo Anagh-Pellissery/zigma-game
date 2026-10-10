@@ -587,11 +587,16 @@ begin
     delete from orders where true;
 
   elsif p_action = 'reset-shop' then
-    update teams t set credits = t.credits + coalesce((select sum(total) from orders where team_id = t.id and phase != 'auction'), 0);
-    delete from orders where phase != 'auction';
+    -- undo team-to-team trades, refund shop purchases, take the components back and restock; auction items stay
+    update teams tm set credits = tm.credits
+      + coalesce((select sum(h.total) from trading_history h where h.buyer_id = tm.id), 0)
+      - coalesce((select sum(h.total) from trading_history h where h.seller_id = tm.id), 0)
+      + coalesce((select sum(o.total) from orders o where o.team_id = tm.id and o.phase <> 'auction'), 0)
+    where true;
+    delete from orders where phase <> 'auction';
     delete from inventory where item_id in (select id from shop_components);
-    delete from trading_listings where item_id in (select id from shop_components);
-    delete from trading_history where item_id in (select id from shop_components);
+    delete from trading_listings where true;
+    delete from trading_history where true;
     update shop_components set qty = default_qty where true;
 
   elsif p_action = 'reset-all' then
