@@ -100,7 +100,7 @@ const Home = ({ api, setTok, setRole, showToast, tok, role, me, logout, isAdminL
 };
 
 const TeamHeader = ({ active, tok, role, me, logout }) => (
-  <Nav items={[['shop', 'Shop'], ['auction', 'Auction'], ['kit', 'My Kit']]} active={active} tok={tok} role={role} me={me} logout={logout} />
+  <Nav items={[['shop', 'Shop'], ['auction', 'Auction'], ['kit', 'My Kit'], ['trade', 'Trading']]} active={active} tok={tok} role={role} me={me} logout={logout} />
 );
 
 const Shop = ({ pub, me, setMe, ph, priceOf, api, showToast, tok, role, logout }) => {
@@ -1001,6 +1001,229 @@ const Admin = ({ route, adm, pub, ph, priceOf, api, load, showToast, tok, role, 
   );
 };
 
+const TeamTrading = ({ pub, me, setMe, api, showToast, tok, role, logout }) => {
+  const [tab, setTab] = useState('buy');
+  const [selectedCompId, setSelectedCompId] = useState('');
+  const [sellQtys, setSellQtys] = useState({});
+  const [buyQtys, setBuyQtys] = useState({});
+
+  if (!pub) return <div className="wrap">Loading...</div>;
+
+  const listings = pub.tradingListings || [];
+  const myTrades = me?.trades || [];
+  const myListings = me?.listings || [];
+
+  const handleSell = async (itemId, maxQty) => {
+    const q = Number(sellQtys[itemId]) || 1;
+    if (q > maxQty) {
+      showToast('Not enough quantity available');
+      return;
+    }
+    try {
+      setMe(await api('trade/sell', { itemId, qty: q }));
+      showToast('Listed for sale');
+      setSellQtys(prev => ({ ...prev, [itemId]: '' }));
+    } catch (e) { showToast(e.message); }
+  };
+
+  const handleCancel = async (listingId) => {
+    try {
+      setMe(await api('trade/cancel', { listingId }));
+      showToast('Listing cancelled');
+    } catch (e) { showToast(e.message); }
+  };
+
+  const handleBuy = async (listingId, maxQty) => {
+    const q = Number(buyQtys[listingId]) || 1;
+    if (q > maxQty) {
+      showToast('Not enough quantity available in this listing');
+      return;
+    }
+    try {
+      setMe(await api('trade/buy', { listingId, qty: q }));
+      showToast(`Bought ${q} items`);
+      setBuyQtys(prev => ({ ...prev, [listingId]: '' }));
+      setSelectedCompId('');
+    } catch (e) { showToast(e.message); }
+  };
+
+  const availableComps = pub.components.filter(c => listings.some(l => l.itemId === c.id && l.teamId !== me?.id));
+
+  return (
+    <>
+      <TeamHeader active="trade" tok={tok} role={role} me={me} logout={logout} />
+      <div className="wrap">
+        <div className="tabs" style={{ justifyContent: 'space-between' }}>
+          <h2 style={{ margin: 0 }}>Trading Marketplace</h2>
+          <span style={{ padding: '14px 0' }} className="mono">Credits <b className="red" style={{ fontSize: '18px' }}>{me ? fmt(me.credits) : '…'}</b></span>
+        </div>
+        
+        <div style={{ display: 'flex', gap: '10px', marginTop: '16px', marginBottom: '24px' }}>
+          <button className={`btn ${tab === 'buy' ? 'r' : 'o'}`} onClick={() => setTab('buy')}>Buy Components</button>
+          <button className={`btn ${tab === 'sell' ? 'r' : 'o'}`} onClick={() => setTab('sell')}>Sell Components</button>
+          <button className={`btn ${tab === 'listings' ? 'r' : 'o'}`} onClick={() => setTab('listings')}>My Listings</button>
+          <button className={`btn ${tab === 'trades' ? 'r' : 'o'}`} onClick={() => setTab('trades')}>My Trades</button>
+        </div>
+
+        {tab === 'buy' && (
+          <div className="panel">
+            {!selectedCompId ? (
+              <>
+                <div className="mono red" style={{ marginBottom: '16px' }}>// Components available for trade</div>
+                {availableComps.length === 0 ? (
+                  <p className="mut">No components are currently being sold by other teams.</p>
+                ) : (
+                  <div className="grid">
+                    {availableComps.map(c => {
+                      const compListings = listings.filter(l => l.itemId === c.id && l.teamId !== me?.id);
+                      const sellersCount = new Set(compListings.map(l => l.teamId)).size;
+                      if (sellersCount === 0) return null;
+                      return (
+                        <div className="card" key={c.id}>
+                          <h3>{c.name}</h3>
+                          <div className="price">{fmt(c.base)}</div>
+                          <div className="mono mut">Base price per unit</div>
+                          <div className="mut" style={{ margin: '8px 0' }}>{sellersCount} team(s) selling</div>
+                          <button className="btn sm r" onClick={() => setSelectedCompId(c.id)}>Find Sellers</button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="flex" style={{ alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                  <button className="btn sm o" onClick={() => setSelectedCompId('')}>← Back</button>
+                  <h3 style={{ margin: 0 }}>Active Offers for {pub.components.find(c => c.id === selectedCompId)?.name}</h3>
+                </div>
+                <table>
+                  <tbody>
+                    <tr><th style={{textAlign:'left'}}>Seller Team</th><th style={{textAlign:'left'}}>Available Qty</th><th style={{textAlign:'left'}}>Price per Unit</th><th style={{textAlign:'left'}}>Total</th><th style={{textAlign:'left'}}>Buy</th></tr>
+                    {listings.filter(l => l.itemId === selectedCompId && l.teamId !== me?.id).map(l => {
+                      const q = Number(buyQtys[l.id]) || 1;
+                      return (
+                        <tr key={l.id}>
+                          <td>{l.teamName}</td>
+                          <td>{l.qty}</td>
+                          <td>{fmt(l.price)}</td>
+                          <td><b className="red">{fmt(l.price * q)}</b></td>
+                          <td>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                              <input type="number" min="1" max={l.qty} value={buyQtys[l.id] || 1} onChange={e => setBuyQtys({...buyQtys, [l.id]: e.target.value})} style={{ width: '80px' }} />
+                              <button className="btn sm r" onClick={() => handleBuy(l.id, l.qty)}>Buy</button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {listings.filter(l => l.itemId === selectedCompId && l.teamId !== me?.id).length === 0 && (
+                      <tr><td colSpan="5" className="mut">No active offers from other teams right now.</td></tr>
+                    )}
+                  </tbody>
+                </table>
+              </>
+            )}
+          </div>
+        )}
+
+        {tab === 'sell' && (
+          <div className="panel">
+            <div className="mono red" style={{ marginBottom: '16px' }}>// Sell your shop components</div>
+            <p className="mut" style={{ marginBottom: '24px' }}>You can only sell components at their official base price. You cannot trade auction items.</p>
+            <table>
+              <tbody>
+                <tr><th style={{textAlign:'left'}}>Component</th><th style={{textAlign:'left'}}>Base Price</th><th style={{textAlign:'left'}}>Total Owned</th><th style={{textAlign:'left'}}>In Active Trades</th><th style={{textAlign:'left'}}>Available to Sell</th><th style={{textAlign:'left'}}>List</th></tr>
+                {pub.components.filter(c => me?.inv?.[c.id] > 0 || me?.tradeCommitted?.[c.id] > 0).map(c => {
+                  const owned = me?.inv?.[c.id] || 0;
+                  const committed = me?.tradeCommitted?.[c.id] || 0;
+                  const available = owned - committed;
+                  return (
+                    <tr key={c.id}>
+                      <td>{c.name}</td>
+                      <td>{fmt(c.base)}</td>
+                      <td>{owned}</td>
+                      <td>{committed}</td>
+                      <td>{available}</td>
+                      <td>
+                        {available > 0 ? (
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <input type="number" min="1" max={available} value={sellQtys[c.id] || 1} onChange={e => setSellQtys({...sellQtys, [c.id]: e.target.value})} style={{ width: '80px' }} />
+                            <button className="btn sm r" onClick={() => handleSell(c.id, available)}>List for Sale</button>
+                          </div>
+                        ) : (
+                          <span className="mut">None available</span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+                {pub.components.filter(c => me?.inv?.[c.id] > 0 || me?.tradeCommitted?.[c.id] > 0).length === 0 && (
+                  <tr><td colSpan="6" className="mut">You don't own any shop components to sell.</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {tab === 'listings' && (
+          <div className="panel">
+            <div className="mono red" style={{ marginBottom: '16px' }}>// My Listings</div>
+            <table>
+              <tbody>
+                <tr><th style={{textAlign:'left'}}>Time</th><th style={{textAlign:'left'}}>Component</th><th style={{textAlign:'left'}}>Listed Qty</th><th style={{textAlign:'left'}}>Remaining Qty</th><th style={{textAlign:'left'}}>Selling Price</th><th style={{textAlign:'left'}}>Status</th><th style={{textAlign:'left'}}>Action</th></tr>
+                {myListings.map(l => {
+                  const cName = pub.components.find(c => c.id === l.itemId)?.name || l.itemId;
+                  return (
+                    <tr key={l.id}>
+                      <td>{new Date(l.t).toLocaleTimeString()}</td>
+                      <td>{cName}</td>
+                      <td>{l.initialQty}</td>
+                      <td>{l.qty}</td>
+                      <td>{fmt(l.price)}</td>
+                      <td><span className={`tag ${l.status === 'active' ? 'd' : ''}`}>{l.status.replace('_', ' ')}</span></td>
+                      <td>
+                        {l.status === 'active' && <button className="btn sm o" onClick={() => handleCancel(l.id)}>Cancel</button>}
+                      </td>
+                    </tr>
+                  );
+                })}
+                {myListings.length === 0 && <tr><td colSpan="7" className="mut">You haven't listed anything yet.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {tab === 'trades' && (
+          <div className="panel">
+            <div className="mono red" style={{ marginBottom: '16px' }}>// My Trades</div>
+            <table>
+              <tbody>
+                <tr><th style={{textAlign:'left'}}>Time</th><th style={{textAlign:'left'}}>Type</th><th style={{textAlign:'left'}}>Other Team</th><th style={{textAlign:'left'}}>Component</th><th style={{textAlign:'left'}}>Qty</th><th style={{textAlign:'left'}}>Total</th></tr>
+                {myTrades.map(t => {
+                  const cName = pub.components.find(c => c.id === t.itemId)?.name || t.itemId;
+                  return (
+                    <tr key={t.id}>
+                      <td>{new Date(t.t).toLocaleTimeString()}</td>
+                      <td><span className={`tag ${t.isSeller ? 'd' : ''}`}>{t.isSeller ? 'Sold to' : 'Bought from'}</span></td>
+                      <td>{t.otherTeam}</td>
+                      <td>{cName}</td>
+                      <td>{t.qty}</td>
+                      <td>{fmt(t.total)}</td>
+                    </tr>
+                  );
+                })}
+                {myTrades.length === 0 && <tr><td colSpan="6" className="mut">No trades yet.</td></tr>}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+      </div>
+    </>
+  );
+};
+
 const Display = ({ pub, ph, priceOf }) => {
   if (!pub) return null;
   const { p, left } = ph();
@@ -1169,8 +1392,9 @@ export default function App() {
           (route === 'admin' || route === 'admin-auction') && role === 'admin' ? <Admin route={route} adm={adm} pub={pub} ph={ph} priceOf={priceOf} api={api} load={load} showToast={showToast} tok={tok} role={role} me={me} logout={logout} now={nowUi} /> :
             route === 'shop' && role === 'team' ? <Shop pub={pub} me={me} setMe={setMe} ph={ph} priceOf={priceOf} api={api} showToast={showToast} tok={tok} role={role} logout={logout} /> :
               route === 'kit' && role === 'team' ? <MyKit pub={pub} me={me} tok={tok} role={role} logout={logout} /> :
-                route === 'auction' && role === 'team' ? <TeamAuction pub={pub} me={me} api={api} showToast={showToast} tok={tok} role={role} logout={logout} /> :
-                  <Home api={api} setTok={setTok} setRole={setRole} showToast={showToast} tok={tok} role={role} me={me} logout={logout} isAdminLogin={route === 'admin-login'} />}
+                route === 'trade' && role === 'team' ? <TeamTrading pub={pub} me={me} setMe={setMe} api={api} showToast={showToast} tok={tok} role={role} logout={logout} /> :
+                  route === 'auction' && role === 'team' ? <TeamAuction pub={pub} me={me} api={api} showToast={showToast} tok={tok} role={role} logout={logout} /> :
+                    <Home api={api} setTok={setTok} setRole={setRole} showToast={showToast} tok={tok} role={role} me={me} logout={logout} isAdminLogin={route === 'admin-login'} />}
     </>
   );
 }

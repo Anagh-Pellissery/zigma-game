@@ -55,7 +55,7 @@ async function rpc(fn, args) {
   return data;
 }
 
-const TEAM_ACTIONS = { me: 'me', buy: 'buy', 'team/bid': 'bid' };
+const TEAM_ACTIONS = { me: 'me', buy: 'buy', 'team/bid': 'bid', 'trade/sell': 'trade_sell', 'trade/cancel': 'trade_cancel', 'trade/buy': 'trade_buy' };
 
 export default async function handler(req, res) {
   const send = (status, obj) => {

@@ -98,6 +98,29 @@ create table if not exists auction_history (
   sold boolean not null
 );
 
+create table if not exists trading_listings (
+  id bigint generated always as identity primary key,
+  created_at timestamptz not null default now(),
+  team_id bigint not null references teams(id) on delete cascade,
+  item_id text not null references shop_components(id) on delete cascade,
+  initial_qty int not null check (initial_qty > 0),
+  qty int not null check (qty >= 0),
+  price int not null check (price >= 0),
+  status text not null default 'active' check (status in ('active', 'sold_out', 'cancelled'))
+);
+create index if not exists trading_listings_team_idx on trading_listings (team_id, id desc);
+
+create table if not exists trading_history (
+  id bigint generated always as identity primary key,
+  created_at timestamptz not null default now(),
+  seller_id bigint not null references teams(id) on delete cascade,
+  buyer_id bigint not null references teams(id) on delete cascade,
+  item_id text not null references shop_components(id) on delete cascade,
+  qty int not null,
+  price int not null,
+  total int not null
+);
+
 create table if not exists public_state (
   id int primary key default 1 check (id = 1),
   v bigint not null default 0,
@@ -114,9 +137,11 @@ alter table orders enable row level security;
 alter table auction_state enable row level security;
 alter table auction_history enable row level security;
 alter table public_state enable row level security;
+alter table trading_listings enable row level security;
+alter table trading_history enable row level security;
 
 revoke all on settings, teams, shop_components, auction_items, inventory, orders,
-  auction_state, auction_history, public_state from anon, authenticated;
+  auction_state, auction_history, public_state, trading_listings, trading_history from anon, authenticated;
 grant select on public_state to anon, authenticated;
 
 drop policy if exists "public snapshot is readable" on public_state;
@@ -173,6 +198,9 @@ begin
     'mult', s.mult,
     'components', coalesce((select jsonb_agg(jsonb_build_object('id', id, 'name', name, 'base', price, 'soldOut', qty <= 0) order by sort) from shop_components), '[]'),
     'auctionItems', coalesce((select jsonb_agg(jsonb_build_object('id', id, 'name', name) order by sort) from auction_items), '[]'),
+    'tradingListings', coalesce((select jsonb_agg(jsonb_build_object('id', l.id, 'teamId', l.team_id, 'teamName', t.username,
+        'itemId', l.item_id, 'qty', l.qty, 'price', l.price, 'createdAt', _ms(l.created_at)) order by l.id)
+      from trading_listings l join teams t on t.id = l.team_id where l.status = 'active'), '[]'),
     'auction', jsonb_build_object(
       'status', a.status,
       'left', cardinality(a.queue),
@@ -282,6 +310,60 @@ begin
   update auction_items set next_price = base where true;
 end $$;
 
+-- ---------------------------------------------------------------- trading (team-to-team, shop components only, at base price)
+-- items stay in the seller's inventory until bought; active listings only reserve them
+create or replace function _trade_sell(p_team bigint, p_item_id text, p_qty numeric) returns void
+language plpgsql set search_path = public as $$
+declare c shop_components; owned int; committed int; q int;
+begin
+  if p_qty is null or p_qty < 1 or p_qty > 100000 then raise exception 'Invalid quantity'; end if;
+  q := floor(p_qty);
+  select * into c from shop_components where id = p_item_id;
+  if not found then raise exception 'Only shop components can be traded'; end if;
+  select coalesce(sum(qty), 0) into owned from inventory where team_id = p_team and item_id = p_item_id;
+  select coalesce(sum(qty), 0) into committed from trading_listings where team_id = p_team and item_id = p_item_id and status = 'active';
+  if q > owned - committed then raise exception 'Not enough available inventory to list'; end if;
+  insert into trading_listings (team_id, item_id, initial_qty, qty, price) values (p_team, p_item_id, q, q, c.price);
+end $$;
+
+create or replace function _trade_cancel(p_team bigint, p_listing_id numeric) returns void
+language plpgsql set search_path = public as $$
+declare l trading_listings;
+begin
+  select * into l from trading_listings where id = p_listing_id and team_id = p_team;
+  if not found then raise exception 'Listing not found'; end if;
+  if l.status <> 'active' then raise exception 'Listing is not active'; end if;
+  update trading_listings set status = 'cancelled' where id = l.id;
+end $$;
+
+create or replace function _trade_buy(p_team bigint, p_listing_id numeric, p_qty numeric) returns void
+language plpgsql set search_path = public as $$
+declare l trading_listings; t teams; q int; cost int;
+begin
+  if p_qty is null or p_qty < 1 or p_qty > 100000 then raise exception 'Invalid quantity'; end if;
+  q := floor(p_qty);
+  select * into l from trading_listings where id = p_listing_id;
+  if not found then raise exception 'Listing not found'; end if;
+  if l.status <> 'active' then raise exception 'Listing is no longer active'; end if;
+  if l.team_id = p_team then raise exception 'Cannot buy your own listing'; end if;
+  if q > l.qty then raise exception 'Only % left in this listing', l.qty; end if;
+  if not exists (select 1 from inventory where team_id = l.team_id and item_id = l.item_id and qty >= q) then
+    raise exception 'Seller no longer has this item';
+  end if;
+  cost := q * l.price;
+  select * into t from teams where id = p_team;
+  if t.credits < cost then raise exception 'Not enough credits'; end if;
+  update trading_listings set qty = qty - q, status = case when qty - q = 0 then 'sold_out' else 'active' end where id = l.id;
+  update teams set credits = credits - cost where id = p_team;
+  update teams set credits = credits + cost where id = l.team_id;
+  update inventory set qty = qty - q where team_id = l.team_id and item_id = l.item_id;
+  delete from inventory where team_id = l.team_id and item_id = l.item_id and qty <= 0;
+  insert into inventory (team_id, item_id, qty) values (p_team, l.item_id, q)
+    on conflict (team_id, item_id) do update set qty = inventory.qty + excluded.qty;
+  insert into trading_history (seller_id, buyer_id, item_id, qty, price, total)
+    values (l.team_id, p_team, l.item_id, q, l.price, cost);
+end $$;
+
 -- ---------------------------------------------------------------- API entry points
 create or replace function game_login(p_u text, p_p text) returns jsonb
 language sql stable set search_path = public, extensions as $$
@@ -292,11 +374,25 @@ $$;
 create or replace function game_me(p_team bigint) returns jsonb
 language sql stable set search_path = public as $$
   select jsonb_build_object(
+    'id', t.id,
     'u', t.username,
     'credits', t.credits,
     'inv', coalesce((select jsonb_object_agg(item_id, qty) from inventory where team_id = t.id and qty > 0), '{}'),
     'orders', coalesce((select jsonb_agg(jsonb_build_object('item', item, 'qty', qty, 'total', total, 't', _ms(created_at)) order by id desc)
-                        from orders where team_id = t.id), '[]'))
+                        from orders where team_id = t.id), '[]'),
+    'listings', coalesce((select jsonb_agg(jsonb_build_object('id', l.id, 'itemId', l.item_id, 'initialQty', l.initial_qty, 'qty', l.qty,
+                            'price', l.price, 'status', l.status, 't', _ms(l.created_at)) order by l.id desc)
+                          from trading_listings l where l.team_id = t.id), '[]'),
+    'trades', coalesce((select jsonb_agg(jsonb_build_object('id', th.id, 'isSeller', th.seller_id = t.id,
+                          'otherTeam', case when th.seller_id = t.id then b.username else s.username end,
+                          'itemId', th.item_id, 'qty', th.qty, 'price', th.price, 'total', th.total, 't', _ms(th.created_at)) order by th.id desc)
+                        from trading_history th
+                        join teams s on s.id = th.seller_id
+                        join teams b on b.id = th.buyer_id
+                        where th.seller_id = t.id or th.buyer_id = t.id), '[]'),
+    'tradeCommitted', coalesce((select jsonb_object_agg(c.item_id, c.n) from (
+                        select l.item_id, sum(l.qty) as n from trading_listings l
+                        where l.team_id = t.id and l.status = 'active' group by l.item_id) c), '{}'))
   from teams t where t.id = p_team
 $$;
 
@@ -310,6 +406,9 @@ begin
   if p_action = 'me' then return game_me(p_team);
   elsif p_action = 'buy' then perform _buy(p_team, p_body->>'id', _num(p_body->'qty'));
   elsif p_action = 'bid' then perform _bid(p_team, _num(p_body->'amount'));
+  elsif p_action = 'trade_sell' then perform _trade_sell(p_team, p_body->>'itemId', _num(p_body->'qty'));
+  elsif p_action = 'trade_cancel' then perform _trade_cancel(p_team, _num(p_body->'listingId'));
+  elsif p_action = 'trade_buy' then perform _trade_buy(p_team, _num(p_body->'listingId'), _num(p_body->'qty'));
   else raise exception 'Not found';
   end if;
   perform refresh_public_state();
@@ -489,6 +588,8 @@ begin
 
   elsif p_action = 'reset-all' then
     delete from orders where true;
+    delete from trading_listings where true;
+    delete from trading_history where true;
     delete from inventory where true;
     perform _reset_auction();
     update settings set started_at = null where id = 1;
@@ -509,7 +610,7 @@ declare f record;
 begin
   for f in select p.oid::regprocedure as sig from pg_proc p join pg_namespace ns on ns.oid = p.pronamespace
     where ns.nspname = 'public' and p.proname in ('_ms', 'server_now', '_num', 'game_phase', 'refresh_public_state',
-      '_clear_lot', '_refund_leader', '_auc_next', '_bid', '_buy', '_reset_auction', 'game_login', 'game_me',
+      '_clear_lot', '_refund_leader', '_auc_next', '_bid', '_buy', '_reset_auction', '_trade_sell', '_trade_cancel', '_trade_buy', 'game_login', 'game_me',
       'game_team', 'admin_state', 'game_admin')
   loop
     execute format('revoke execute on function %s from public, anon, authenticated', f.sig);
