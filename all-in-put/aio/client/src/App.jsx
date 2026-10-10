@@ -855,7 +855,14 @@ const Admin = ({ route, adm, pub, ph, priceOf, api, load, showToast, tok, role, 
                   ))}
                 </tbody>
               </table>
-              <p><button className="btn" onClick={saveComps}>Save inventory</button></p>
+              <p>
+                <button className="btn" onClick={saveComps}>Save inventory</button>
+                <button className="btn o" style={{ marginLeft: '10px' }} onClick={async () => {
+                  if (window.confirm('Reset shop components?\n\nThis will restore all component quantities to their defaults and take back components from teams (refunding their credits). Auction items and balances will NOT be affected.')) {
+                    await post('admin/reset-shop', {}, 'Shop inventory reset and teams refunded');
+                  }
+                }}>Reset shop stock</button>
+              </p>
             </div>
 
             <h2>Teams Leaderboard</h2>

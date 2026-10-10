@@ -586,6 +586,14 @@ begin
   elsif p_action = 'reset-orders' then
     delete from orders where true;
 
+  elsif p_action = 'reset-shop' then
+    update teams t set credits = t.credits + coalesce((select sum(total) from orders where team_id = t.id and phase != 'auction'), 0);
+    delete from orders where phase != 'auction';
+    delete from inventory where item_id in (select id from shop_components);
+    delete from trading_listings where item_id in (select id from shop_components);
+    delete from trading_history where item_id in (select id from shop_components);
+    update shop_components set qty = default_qty where true;
+
   elsif p_action = 'reset-all' then
     delete from orders where true;
     delete from trading_listings where true;
