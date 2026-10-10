@@ -312,10 +312,17 @@ end $$;
 
 -- ---------------------------------------------------------------- trading (team-to-team, shop components only, at base price)
 -- items stay in the seller's inventory until bought; active listings only reserve them
+-- trading is closed until the auction has finished (all lots done, or the admin pressed "End auction")
+create or replace function _trading_open() returns boolean
+language sql stable set search_path = public as $$
+  select coalesce((select status = 'done' from auction_state where id = 1), false)
+$$;
+
 create or replace function _trade_sell(p_team bigint, p_item_id text, p_qty numeric) returns void
 language plpgsql set search_path = public as $$
 declare c shop_components; owned int; committed int; q int;
 begin
+  if not _trading_open() then raise exception 'Trading opens after the auction ends'; end if;
   if p_qty is null or p_qty < 1 or p_qty > 100000 then raise exception 'Invalid quantity'; end if;
   q := floor(p_qty);
   select * into c from shop_components where id = p_item_id;
@@ -340,6 +347,7 @@ create or replace function _trade_buy(p_team bigint, p_listing_id numeric, p_qty
 language plpgsql set search_path = public as $$
 declare l trading_listings; t teams; q int; cost int;
 begin
+  if not _trading_open() then raise exception 'Trading opens after the auction ends'; end if;
   if p_qty is null or p_qty < 1 or p_qty > 100000 then raise exception 'Invalid quantity'; end if;
   q := floor(p_qty);
   select * into l from trading_listings where id = p_listing_id;
@@ -551,6 +559,17 @@ begin
     perform _refund_leader();
     perform _reset_auction();
 
+  -- stop the auction early (opens trading): the lot on the block goes unsold and its top bid is refunded
+  elsif p_action = 'auction-end' then
+    if a.status = 'done' then raise exception 'The auction has already ended'; end if;
+    if a.lot_item_id is not null then
+      perform _refund_leader();
+      insert into auction_history (item_id, name, start_price, price, team_name, sold)
+        values (a.lot_item_id, a.lot_name, a.lot_start, 0, null, false);
+    end if;
+    perform _clear_lot('done');
+    update auction_state set queue = '{}' where id = 1;
+
   elsif p_action = 'team-add' then
     v_u := trim(coalesce(b->>'u', ''));
     v_p := coalesce(b->>'p', '');
@@ -623,7 +642,7 @@ declare f record;
 begin
   for f in select p.oid::regprocedure as sig from pg_proc p join pg_namespace ns on ns.oid = p.pronamespace
     where ns.nspname = 'public' and p.proname in ('_ms', 'server_now', '_num', 'game_phase', 'refresh_public_state',
-      '_clear_lot', '_refund_leader', '_auc_next', '_bid', '_buy', '_reset_auction', '_trade_sell', '_trade_cancel', '_trade_buy', 'game_login', 'game_me',
+      '_clear_lot', '_refund_leader', '_auc_next', '_bid', '_buy', '_reset_auction', '_trading_open', '_trade_sell', '_trade_cancel', '_trade_buy', 'game_login', 'game_me',
       'game_team', 'admin_state', 'game_admin')
   loop
     execute format('revoke execute on function %s from public, anon, authenticated', f.sig);

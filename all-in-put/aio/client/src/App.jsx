@@ -80,10 +80,8 @@ const Home = ({ api, setTok, setRole, showToast, tok, role, me, logout, isAdminL
               <button className="btn">Enter portal →</button>
             </form>
             <div style={{ marginTop: '20px' }}>
-              {isAdminLogin ? (
+              {isAdminLogin && (
                 <a href="#/" className="mut mono" style={{ fontSize: '14px', textDecoration: 'underline' }}>← Back to Team Login</a>
-              ) : (
-                <a href="#/admin-login" className="mut mono" style={{ fontSize: '14px', textDecoration: 'underline' }}>Admin Login →</a>
               )}
             </div>
           </div>
@@ -418,6 +416,7 @@ const AuctionAdmin = ({ adm, pub, api, load, showToast, now }) => {
         <div className="flex" style={{ marginTop: '18px' }}>
           <button className="btn r" disabled={pa.status !== 'idle' || !lq.length} onClick={() => post('admin/auction-start', {}, 'Auction started')}>▶ Start auction</button>
           <button className="btn o" disabled={pa.status !== 'idle'} onClick={generate}>🎲 Generate random list</button>
+          <button className="btn r" disabled={pa.status === 'done'} onClick={() => { if (window.confirm('End the auction now and open trading?\n\nRemaining lots are dropped. The lot on the block (if any) goes unsold and its top bid is refunded.')) post('admin/auction-end', {}, 'Auction ended — trading is open'); }}>■ End auction</button>
           <button className="btn o" onClick={() => { if (window.confirm('Reset the auction? The list, history and starting prices are cleared. Credits and items teams already won are NOT refunded (use Reset all event data for that).')) post('admin/auction-reset', {}, 'Auction reset'); }}>Reset auction</button>
         </div>
       </div>
@@ -1054,6 +1053,8 @@ const TeamTrading = ({ pub, me, setMe, api, showToast, tok, role, logout }) => {
     } catch (e) { showToast(e.message); }
   };
 
+  const open = pub.auction?.status === 'done';
+  const view = open || tab === 'listings' || tab === 'trades' ? tab : 'listings';
   const availableComps = pub.components.filter(c => listings.some(l => l.itemId === c.id && l.teamId !== me?.id));
 
   return (
@@ -1066,13 +1067,20 @@ const TeamTrading = ({ pub, me, setMe, api, showToast, tok, role, logout }) => {
         </div>
         
         <div style={{ display: 'flex', gap: '10px', marginTop: '16px', marginBottom: '24px' }}>
-          <button className={`btn ${tab === 'buy' ? 'r' : 'o'}`} onClick={() => setTab('buy')}>Buy Components</button>
-          <button className={`btn ${tab === 'sell' ? 'r' : 'o'}`} onClick={() => setTab('sell')}>Sell Components</button>
-          <button className={`btn ${tab === 'listings' ? 'r' : 'o'}`} onClick={() => setTab('listings')}>My Listings</button>
-          <button className={`btn ${tab === 'trades' ? 'r' : 'o'}`} onClick={() => setTab('trades')}>My Trades</button>
+          {open && <button className={`btn ${view === 'buy' ? 'r' : 'o'}`} onClick={() => setTab('buy')}>Buy Components</button>}
+          {open && <button className={`btn ${view === 'sell' ? 'r' : 'o'}`} onClick={() => setTab('sell')}>Sell Components</button>}
+          <button className={`btn ${view === 'listings' ? 'r' : 'o'}`} onClick={() => setTab('listings')}>My Listings</button>
+          <button className={`btn ${view === 'trades' ? 'r' : 'o'}`} onClick={() => setTab('trades')}>My Trades</button>
         </div>
 
-        {tab === 'buy' && (
+        {!open && (
+          <div className="panel" style={{ marginBottom: '24px' }}>
+            <div className="mono red">// Trading is closed</div>
+            <p className="mut" style={{ marginTop: '8px' }}>The trading window opens once the auction has ended.</p>
+          </div>
+        )}
+
+        {view === 'buy' && (
           <div className="panel">
             {!selectedCompId ? (
               <>
@@ -1134,7 +1142,7 @@ const TeamTrading = ({ pub, me, setMe, api, showToast, tok, role, logout }) => {
           </div>
         )}
 
-        {tab === 'sell' && (
+        {view === 'sell' && (
           <div className="panel">
             <div className="mono red" style={{ marginBottom: '16px' }}>// Sell your shop components</div>
             <p className="mut" style={{ marginBottom: '24px' }}>You can only sell components at their official base price. You cannot trade auction items.</p>
@@ -1173,7 +1181,7 @@ const TeamTrading = ({ pub, me, setMe, api, showToast, tok, role, logout }) => {
           </div>
         )}
 
-        {tab === 'listings' && (
+        {view === 'listings' && (
           <div className="panel">
             <div className="mono red" style={{ marginBottom: '16px' }}>// My Listings</div>
             <table>
@@ -1201,7 +1209,7 @@ const TeamTrading = ({ pub, me, setMe, api, showToast, tok, role, logout }) => {
           </div>
         )}
 
-        {tab === 'trades' && (
+        {view === 'trades' && (
           <div className="panel">
             <div className="mono red" style={{ marginBottom: '16px' }}>// My Trades</div>
             <table>
@@ -1340,7 +1348,13 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (route === 'admin' || route === 'admin-auction' || route === 'shop') load();
+    if (!tok) return;
+    const pages = role === 'admin' ? ['admin', 'admin-auction'] : ['shop', 'kit', 'trade', 'auction'];
+    if (!pages.includes(route) && route !== 'display' && route !== 'auction-display') {
+      window.location.hash = role === 'admin' ? '#/admin' : '#/shop';
+      return;
+    }
+    load();
   }, [route, tok, role]);
 
   // Live public state: Supabase Realtime pushes every change to the public_state row; a slow poll covers reconnects.
